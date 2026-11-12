@@ -2,11 +2,10 @@ import { router } from 'expo-router'
 import React from 'react'
 import { Alert, Image, Text, View } from 'react-native'
 import { Button, Card, H1, H2, Muted, P, Row, Screen } from '../../components/ui'
-import { EXERCISE_MAP, imgUrl } from '../../data/exercises'
+import { EXERCISE_MAP, imgUrl, PATTERN_NAMES } from '../../data/exercises'
 import { describeSet, generateProgram, LEVEL_NAMES } from '../../lib/program'
 import { setState, useStore } from '../../lib/store'
 import { C } from '../../lib/theme'
-import { PATTERN_NAMES } from '../../data/exercises'
 import type { Pattern } from '../../lib/types'
 
 export default function Antrenman() {

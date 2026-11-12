@@ -31,7 +31,7 @@ export function testsFor(p: Profile): TestDef[] {
 
 const thr = (m: number[], f: number[]) => (sex: 'm' | 'f') => (sex === 'm' ? m : f)
 const TH = {
-  push: thr([5, 15, 30], [2, 8, 20]),
+  push: thr([1, 8, 20], [1, 4, 12]),
   squat: thr([15, 30, 45], [12, 25, 40]),
   pullup: thr([1, 5, 10], [1, 3, 6]),
   towel: thr([8, 15, 25], [6, 12, 20]),
@@ -62,7 +62,7 @@ export function evaluate(p: Profile, weightKg: number, results: Record<string, n
     switch (t.id) {
       case 'push': {
         const variant = variants.push ?? 'pushup'
-        const eff = variant === 'knee_pushup' ? v * 0.5 : variant === 'incline_pushup' ? v * 0.3 : v
+        const eff = variant === 'knee_pushup' ? v * 0.4 : variant === 'incline_pushup' ? v * 0.25 : v
         levels.push = lvl(eff, TH.push(s)); break
       }
       case 'squat': levels.squat = lvl(v, TH.squat(s)); levels.lunge = levels.squat; break
@@ -91,7 +91,7 @@ export function evaluate(p: Profile, weightKg: number, results: Record<string, n
   if (levels.vpush === undefined) levels.vpush = Math.max(0, (levels.push ?? 0) - 1) as Level
   if (levels.lunge === undefined) levels.lunge = levels.squat ?? 0
   levels.cardio = levels.squat ?? 0
-  return { date: new Date().toISOString(), results, weights, levels, oneRm }
+  return { date: new Date().toISOString(), results, weights, variants, levels, oneRm }
 }
 
 export const LEVEL_NAMES = ['Başlangıç', 'Yeni', 'Orta', 'İleri']
@@ -200,17 +200,34 @@ function prescribe(p: Profile, ex: Exercise, a: Assessment, weightKg: number): P
   return { exerciseId: ex.id, sets, reps, weightKg: weightKg_, restSec }
 }
 
+function cardioFinisher(p: Profile, a: Assessment): Prescription | null {
+  const lv = a.levels.cardio ?? 0
+  const eq = new Set(p.equipment)
+  const id = eq.has('treadmill') ? (lv >= 2 ? 'treadmill_run' : 'treadmill_walk') : eq.has('bike') ? 'bike_steady' : null
+  if (!id) return null
+  const mins = [8, 10, 12, 15][lv]
+  return { exerciseId: id, sets: 1, reps: mins * 60, restSec: 0 }
+}
+
 export function generateProgram(p: Profile, a: Assessment, weightKg: number): Program {
   const L = (pt: Pattern) => a.levels[pt] ?? 0
   const days: ProgramDay[] = []
   const used: string[] = []
   const pick = (pt: Pattern, alt = false): Prescription | null => {
-    const ex = pickExercise(p, pt, L(pt), alt ? used : [])
+    let ex = pickExercise(p, pt, L(pt), alt ? used : [])
+    // testte 6+ tekrar yapabildiği şınav çeşidiyle başla
+    if (!alt && pt === 'push' && a.variants?.push && (a.results.push ?? 0) >= 6) {
+      const tested = EXERCISES.find((e) => e.id === a.variants!.push)
+      if (tested && hasEquipment(tested, p.equipment)) ex = tested
+    }
     if (!ex) return null
     used.push(ex.id)
     return prescribe(p, ex, a, weightKg)
   }
   const warm: Prescription = { exerciseId: 'jumping_jack', sets: 1, reps: 45, restSec: 30 }
+  // koşu bandı / bisiklet varsa her günün sonuna kondisyon bitirişi
+  const cardio = cardioFinisher(p, a)
+  const withCardio = (d: ProgramDay): ProgramDay => (cardio ? { ...d, items: [...d.items, cardio] } : d)
   if (p.daysPerWeek <= 3) {
     const A: ProgramDay = { name: 'Tüm Vücut A', items: [warm, pick('squat'), pick('push'), pick('pull'), pick('hinge'), pick('core')].filter(Boolean) as Prescription[] }
     const B: ProgramDay = { name: 'Tüm Vücut B', items: [warm, pick('hinge', true), pick('vpush'), pick('pull', true), pick('lunge'), pick('core', true)].filter(Boolean) as Prescription[] }
@@ -219,14 +236,14 @@ export function generateProgram(p: Profile, a: Assessment, weightKg: number): Pr
       const Cc: ProgramDay = { name: 'Tüm Vücut C', items: [warm, pick('squat', true), pick('push', true), pick('pull'), pick('lunge', true), pick('core')].filter(Boolean) as Prescription[] }
       days.push(Cc)
     }
-    return { createdAt: new Date().toISOString(), days, split: 'full' }
+    return { createdAt: new Date().toISOString(), days: days.map(withCardio), split: 'full' }
   }
   const U1: ProgramDay = { name: 'Üst Vücut A', items: [warm, pick('push'), pick('pull'), pick('vpush'), pick('pull', true), pick('core')].filter(Boolean) as Prescription[] }
   const L1: ProgramDay = { name: 'Alt Vücut A', items: [warm, pick('squat'), pick('hinge'), pick('lunge'), pick('core', true)].filter(Boolean) as Prescription[] }
   const U2: ProgramDay = { name: 'Üst Vücut B', items: [warm, pick('vpush', true), pick('pull', true), pick('push', true), pick('core')].filter(Boolean) as Prescription[] }
   const L2: ProgramDay = { name: 'Alt Vücut B', items: [warm, pick('hinge', true), pick('squat', true), pick('lunge', true), pick('core', true)].filter(Boolean) as Prescription[] }
   days.push(U1, L1, U2, L2)
-  return { createdAt: new Date().toISOString(), days, split: 'ul' }
+  return { createdAt: new Date().toISOString(), days: days.map(withCardio), split: 'ul' }
 }
 
 // ---------- İlerleme ----------
@@ -237,7 +254,7 @@ export function progressAfterWorkout(p: Profile, target: Prescription, sets: Set
   const done = sets.filter((s) => s.done)
   const allHit = done.length >= target.sets && done.every((s) => s.reps >= target.reps)
   const [lo, hi] = ex.repRange
-  const step = ex.unit === 'sec' ? 5 : 1
+  const step = ex.unit === 'sec' ? (ex.pattern === 'cardio' ? 60 : 5) : 1
   let next: Prescription = { ...target }
   let message = 'Aynı hedefle devam. Formu oturt, sonra artırırız.'
   const pr: ExerciseProgress = prog ?? { exerciseId: ex.id, reps: target.reps, weightKg: target.weightKg, streakEasy: 0, streakHard: 0, updatedAt: '' }
@@ -292,8 +309,9 @@ function startWeightForSwap(p: Profile, harder: Exercise, prev: Prescription): n
 
 export function describeSet(pres: Prescription): string {
   const ex = EXERCISE_MAP[pres.exerciseId]
-  const unit = ex.unit === 'sec' ? 'sn' : 'tekrar'
   const side = ex.perSide ? ' (her taraf)' : ''
   const w = pres.weightKg !== undefined ? ` × ${pres.weightKg} kg` : ''
+  if (ex.unit === 'sec' && pres.reps >= 120) return `${Math.round(pres.reps / 60)} dk${w}`
+  const unit = ex.unit === 'sec' ? 'sn' : 'tekrar'
   return `${pres.sets} set × ${pres.reps} ${unit}${side}${w}`
 }

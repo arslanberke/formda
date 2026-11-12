@@ -53,12 +53,13 @@ export default function Profil() {
         <Text style={{ color: C.text, marginTop: 8 }}>Ekipman: {profile.equipment.map((e) => EQUIPMENT.find((q) => q.id === e)?.name).filter(Boolean).join(', ')}</Text>
         {profile.dumbbells.length > 0 && <Muted>Dambıl: {profile.dumbbells.join(', ')} kg</Muted>}
         <Button title="Profili / ekipmanı düzenle" kind="secondary" style={{ marginTop: 12 }} onPress={() => router.push('/onboarding')} />
-        <Muted style={{ marginTop: 6 }}>Ekipman değiştirirsen Antrenman sekmesinden "Programı yenile" de.</Muted>
+        <Button title="Kapasite testini yap / yenile" kind="secondary" style={{ marginTop: 8 }} onPress={() => router.push('/assessment')} />
+        <Muted style={{ marginTop: 6 }}>Ekipman değiştirirsen Antrenman sekmesinden «Programı yenile» de.</Muted>
       </Card>
 
       <Card>
         <H2>Yedek</H2>
-        <P muted style={{ marginBottom: 10 }}>Veriler sadece bu telefonda. Expo Go silinirse ya da telefon değişirse diye ara ara yedek al (Dosyalar / iCloud'a kaydet).</P>
+        <P muted style={{ marginBottom: 10 }}>Veriler sadece bu telefonda. Expo Go silinirse ya da telefon değişirse diye ara ara yedek al (Dosyalar / iCloud’a kaydet).</P>
         <Row>
           <Button title="Yedek al" style={{ flex: 1 }} onPress={doExport} />
           <Button title="Yedeği yükle" kind="secondary" style={{ flex: 1 }} onPress={doImport} />

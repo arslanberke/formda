@@ -2,11 +2,10 @@ import { router } from 'expo-router'
 import React, { useEffect, useRef, useState } from 'react'
 import { Alert, Image, Text, View } from 'react-native'
 import { Button, Card, Chip, H1, H2, Muted, NumberInput, P, Row, Screen, Wrap } from '../components/ui'
-import { EXERCISE_MAP, imgUrl } from '../data/exercises'
+import { EXERCISE_MAP, imgUrl, PATTERN_NAMES } from '../data/exercises'
 import { evaluate, generateProgram, LEVEL_NAMES, testsFor, availableLoads } from '../lib/program'
 import { getState, setState, useStore } from '../lib/store'
 import { C } from '../lib/theme'
-import { PATTERN_NAMES } from '../data/exercises'
 import type { Pattern } from '../lib/types'
 
 export default function Assessment() {
@@ -154,7 +153,7 @@ export default function Assessment() {
       </Card>
       <Row>
         {i > 0 && <Button title="Geri" kind="ghost" onPress={() => setI(i - 1)} style={{ flex: 1 }} />}
-        <Button title={i === tests.length - 1 ? 'Bitir' : 'Sonraki'} disabled={!canNext} onPress={() => { stopTimer(); i === tests.length - 1 ? finish() : setI(i + 1) }} style={{ flex: 2 }} />
+        <Button title={i === tests.length - 1 ? 'Bitir' : 'Sonraki'} disabled={!canNext} onPress={() => { stopTimer(); if (i === tests.length - 1) finish(); else setI(i + 1) }} style={{ flex: 2 }} />
       </Row>
     </Screen>
   )

@@ -69,7 +69,7 @@ export function NumberInput({ label, value, onChange, suffix, placeholder, step 
         {step ? <Pressable onPress={() => { const v = (value ?? 0) - step; const nv = Math.max(0, Math.round(v * 100) / 100); onChange(nv); setText(String(nv)) }} style={styles.stepBtn}><Text style={styles.stepTxt}>−</Text></Pressable> : null}
         <TextInput keyboardType="decimal-pad" placeholder={placeholder} placeholderTextColor="#64748b" value={text} onChangeText={(t) => { setText(t); const n = parseFloat(t.replace(',', '.')); onChange(isNaN(n) ? undefined : n) }} style={[styles.input, { flex: 1, textAlign: step ? 'center' : 'left' }]} />
         {step ? <Pressable onPress={() => { const nv = Math.round(((value ?? 0) + step) * 100) / 100; onChange(nv); setText(String(nv)) }} style={styles.stepBtn}><Text style={styles.stepTxt}>+</Text></Pressable> : null}
-        {suffix ? <Text style={{ color: C.muted, width: 36 }}>{suffix}</Text> : null}
+        {suffix ? <Text style={{ color: C.muted, minWidth: 36 }}>{suffix}</Text> : null}
       </View>
     </View>
   )

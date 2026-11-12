@@ -24,7 +24,7 @@ export default function RootLayout() {
             <Stack.Screen name="assessment" />
             <Stack.Screen name="workout" options={{ gestureEnabled: false }} />
             <Stack.Screen name="exercise/[id]" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="food-add" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="yemek-ekle" options={{ presentation: 'modal' }} />
           </Stack>
         )}
       </SafeAreaProvider>

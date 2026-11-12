@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics'
 import { useKeepAwake } from 'expo-keep-awake'
 import { router, useLocalSearchParams } from 'expo-router'
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Alert, Image, Pressable, Text, View } from 'react-native'
 import { Button, Card, Chip, H1, H2, Muted, NumberInput, P, Row, Screen } from '../components/ui'
 import { EXERCISE_MAP, imgUrl } from '../data/exercises'
@@ -56,7 +56,7 @@ export default function Workout() {
   const entries = active?.entries ?? []
   const e = entries[cur]
   const ex = e ? EXERCISE_MAP[e.exerciseId] : null
-  const doneSets = useMemo(() => entries.reduce((a, x) => a + x.sets.filter((s) => s.done).length, 0), [entries])
+  const doneSets = entries.reduce((a, x) => a + x.sets.filter((s) => s.done).length, 0)
   const totalSets = entries.reduce((a, x) => a + x.sets.length, 0)
 
   if (summary) {
@@ -176,7 +176,7 @@ export default function Workout() {
         {e.sets.map((s, si) => (
           <Row key={si} style={{ alignItems: 'center', marginBottom: 8 }}>
             <Text style={{ color: C.muted, width: 44 }}>Set {si + 1}</Text>
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, minWidth: 0 }}>
               <NumberInput value={s.reps} onChange={(v) => setReps(si, v)} step={ex.unit === 'sec' ? 5 : 1} suffix={ex.unit === 'sec' ? 'sn' : 'tekrar'} />
             </View>
             <Pressable onPress={() => toggleSet(si)} style={{ width: 48, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: s.done ? C.accent2 : C.card2, borderWidth: 1, borderColor: s.done ? C.accent2 : C.border }}>

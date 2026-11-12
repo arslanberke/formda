@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { Alert, Text, View } from 'react-native'
 import { Button, Card, Chip, H1, H2, Input, Muted, NumberInput, P, Row, Screen, Segment, Wrap } from '../components/ui'
 import { EQUIPMENT } from '../data/exercises'
+import { generateProgram } from '../lib/program'
 import { setState, todayStr, useStore } from '../lib/store'
 import { C } from '../lib/theme'
 import type { Activity, EquipmentId, Goal, Profile, Sex } from '../lib/types'
@@ -55,7 +56,8 @@ export default function Onboarding() {
       const body = s.body.filter((b) => b.date !== today)
       body.push({ date: today, weightKg: weightKg! })
       body.sort((a, b) => a.date.localeCompare(b.date))
-      return { profile, body }
+      const program = existing && s.assessment ? generateProgram(profile, s.assessment, weightKg!) : s.program
+      return { profile, body, program, progress: program === s.program ? s.progress : {} }
     })
     if (existing) router.back()
     else router.replace('/assessment')

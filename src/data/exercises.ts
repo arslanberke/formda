@@ -323,6 +323,24 @@ export const EXERCISES: Exercise[] = [
     tips: ['Parmak ucunda yumuşak in.'], repRange: [20, 45],
   },
   {
+    id: 'treadmill_walk', name: 'Koşu Bandında Tempolu Yürüyüş', pattern: 'cardio', tier: 1, equipment: ['treadmill'], load: 'bw', unit: 'sec', img: 'Walking_Treadmill', muscles: 'Bacak, kalp-akciğer',
+    repRange: [300, 1200],
+    steps: ['Bandı 5-6 km/sa hıza, %1-3 eğime ayarla.', 'Dik dur, kollar serbest sallansın; tutunma.', 'Konuşabilecek ama şarkı söyleyemeyecek tempoda yürü.'],
+    tips: ['Hazır olunca eğimi artır, hızı değil.', 'Son 1 dk yavaşla ve soğu.'],
+  },
+  {
+    id: 'treadmill_run', name: 'Koşu Bandında Hafif Koşu', pattern: 'cardio', tier: 3, equipment: ['treadmill'], load: 'bw', unit: 'sec', img: 'Jogging_Treadmill', muscles: 'Bacak, kalp-akciğer',
+    repRange: [300, 1200],
+    steps: ['2 dk yürüyerek ısın.', '8-9 km/sa hızda rahat koşu; adımlar kısa ve sessiz.', 'Zorlanınca 1 dk yürü, sonra devam.'],
+    tips: ['Öne eğilme, bakış ileride.', 'Yüksek nabız hedefi yok; rahat tempo yeter.'],
+  },
+  {
+    id: 'bike_steady', name: 'Bisiklette Tempolu Pedal', pattern: 'cardio', tier: 1, equipment: ['bike'], load: 'bw', unit: 'sec', img: 'Bicycling_Stationary', muscles: 'Bacak, kalp-akciğer',
+    repRange: [300, 1200],
+    steps: ['Sele kalça hizasında; pedal en altta diz hafif kırık.', 'Orta dirençte, dakikada ~80 pedal çevir.', 'Üst gövde rahat, omuzlar düşük.'],
+    tips: ['Nefes kesilmeden konuşabilmelisin.', 'Her hafta 2-3 dk ekle.'],
+  },
+  {
     id: 'burpee', name: 'Burpee', pattern: 'cardio', tier: 4, equipment: [], load: 'bw', unit: 'reps', img: 'Pushups', muscles: 'Tüm vücut',
     steps: ['Çömel, ellerini yere koy.', 'Ayaklarını geriye at (plank), istersen bir şınav yap.', 'Ayaklarını geri çek, zıplayarak kalk.'],
     tips: ['Başlangıçta zıplamayı ve şınavı atla.'], repRange: [5, 12],
@@ -350,11 +368,13 @@ export const EQUIPMENT: { id: EquipmentId; name: string; desc: string; emoji: st
   { id: 'band', name: 'Direnç lastiği', desc: '', emoji: '➰' },
   { id: 'pullupbar', name: 'Barfiks barı', desc: 'Kapı tipi ya da sabit', emoji: '🪜' },
   { id: 'bench', name: 'Bench / sehpa', desc: 'Üstüne yatılabilen sağlam yüzey', emoji: '🛋️' },
+  { id: 'treadmill', name: 'Koşu bandı', desc: 'Yürüyüş / koşu', emoji: '🏃' },
+  { id: 'bike', name: 'Kondisyon bisikleti', desc: 'Sabit bisiklet / eliptik', emoji: '🚴' },
   { id: 'gym', name: 'Spor salonu', desc: 'Makineler, kablo vb.', emoji: '🏢' },
 ]
 
 export function hasEquipment(ex: Exercise, owned: EquipmentId[]) {
   const set = new Set<EquipmentId>(owned)
-  if (set.has('gym')) { set.add('dumbbell'); set.add('barbell'); set.add('bench'); set.add('pullupbar'); set.add('kettlebell') }
+  if (set.has('gym')) { set.add('dumbbell'); set.add('barbell'); set.add('bench'); set.add('pullupbar'); set.add('kettlebell'); set.add('treadmill'); set.add('bike') }
   return ex.equipment.every((e) => set.has(e))
 }

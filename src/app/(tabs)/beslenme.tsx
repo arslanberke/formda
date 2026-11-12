@@ -68,7 +68,7 @@ export default function Beslenme() {
               <H2 style={{ marginBottom: 0 }}>{m.name}</H2>
               <Row style={{ alignItems: 'center' }}>
                 {mk > 0 && <Muted>{mk} kcal</Muted>}
-                <Button small title="+ Ekle" onPress={() => router.push({ pathname: '/food-add', params: { meal: m.id, date } })} />
+                <Button small title="+ Ekle" onPress={() => router.push({ pathname: '/yemek-ekle', params: { meal: m.id, date } })} />
               </Row>
             </Row>
             {items.map((f) => (

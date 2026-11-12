@@ -2,7 +2,7 @@ export type Sex = 'm' | 'f'
 export type Goal = 'lose' | 'maintain' | 'gain'
 export type Activity = 'sedentary' | 'light' | 'moderate' | 'active'
 export type EquipmentId =
-  | 'bodyweight' | 'dumbbell' | 'barbell' | 'kettlebell' | 'band' | 'pullupbar' | 'bench' | 'box' | 'gym'
+  | 'bodyweight' | 'dumbbell' | 'barbell' | 'kettlebell' | 'band' | 'pullupbar' | 'bench' | 'box' | 'treadmill' | 'bike' | 'gym'
 export type Pattern = 'squat' | 'hinge' | 'push' | 'pull' | 'vpush' | 'lunge' | 'core' | 'cardio'
 export type Level = 0 | 1 | 2 | 3 // 0 başlangıç, 1 yeni, 2 orta, 3 ileri
 export type Feel = 'easy' | 'ok' | 'hard'
@@ -38,6 +38,7 @@ export interface Assessment {
   date: string
   results: Record<string, number>          // testId -> değer
   weights: Record<string, number>          // testId -> kullanılan ağırlık
+  variants?: Record<string, string>        // testId -> seçilen hareket çeşidi
   levels: Partial<Record<Pattern, Level>>
   oneRm: Partial<Record<Pattern, number>>
 }
