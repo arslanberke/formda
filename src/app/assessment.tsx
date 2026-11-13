@@ -1,8 +1,9 @@
 import { router } from 'expo-router'
 import React, { useEffect, useRef, useState } from 'react'
-import { Alert, Image, Text, View } from 'react-native'
+import { Alert, Text, View } from 'react-native'
 import { Button, Card, Chip, H1, H2, Muted, NumberInput, P, Row, Screen, Wrap } from '../components/ui'
-import { EXERCISE_MAP, imgUrl, PATTERN_NAMES } from '../data/exercises'
+import { Figure } from '../components/Figure'
+import { EXERCISE_MAP, PATTERN_NAMES } from '../data/exercises'
 import { evaluate, generateProgram, LEVEL_NAMES, testsFor, availableLoads } from '../lib/program'
 import { getState, setState, useStore } from '../lib/store'
 import { C } from '../lib/theme'
@@ -108,10 +109,7 @@ export default function Assessment() {
       <H1>{t.title}</H1>
       {ex && (
         <Card>
-          <Row style={{ marginBottom: 8 }}>
-            <Image source={{ uri: imgUrl(ex, 0) }} style={{ width: '49%', aspectRatio: 1, borderRadius: 10, backgroundColor: '#fff' }} />
-            <Image source={{ uri: imgUrl(ex, 1) }} style={{ width: '49%', aspectRatio: 1, borderRadius: 10, backgroundColor: '#fff' }} />
-          </Row>
+          <View style={{ alignItems: 'center', marginBottom: 8 }}><Figure id={ex.id} size={220} glow /></View>
           <Text style={{ color: C.accent, fontWeight: '700', marginBottom: 6 }}>{ex.name}</Text>
           {ex.steps.map((s, k) => <P key={k} style={{ marginBottom: 4 }}>{k + 1}. {s}</P>)}
           <Button small kind="ghost" title="Hareketi detaylı gör" style={{ marginTop: 8 }} onPress={() => router.push(`/exercise/${ex.id}`)} />
@@ -136,7 +134,7 @@ export default function Assessment() {
         )}
         {t.kind === 'timed60' && (
           <View style={{ alignItems: 'center', marginBottom: 12 }}>
-            <Text style={{ color: timer === 0 ? C.accent2 : C.text, fontSize: 56, fontWeight: '800' }}>{timer === null ? '60' : timer}</Text>
+            <Text style={{ color: timer === 0 ? C.accent2 : C.text, fontSize: 64, fontFamily: 'Unbounded_800ExtraBold', letterSpacing: -3 }}>{timer === null ? '60' : timer}</Text>
             <Button small kind="secondary" title={timer === null ? 'Sayacı başlat' : timer === 0 ? 'Bitti' : 'Durdur'} onPress={() => (timer === null ? startTimer(60) : stopTimer())} />
           </View>
         )}

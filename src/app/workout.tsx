@@ -2,12 +2,17 @@ import * as Haptics from 'expo-haptics'
 import { useKeepAwake } from 'expo-keep-awake'
 import { router, useLocalSearchParams } from 'expo-router'
 import React, { useEffect, useRef, useState } from 'react'
-import { Alert, Image, Pressable, Text, View } from 'react-native'
-import { Button, Card, Chip, H1, H2, Muted, NumberInput, P, Row, Screen } from '../components/ui'
-import { EXERCISE_MAP, imgUrl } from '../data/exercises'
+import { Ionicons } from '@expo/vector-icons'
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native'
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated'
+import { Figure } from '../components/Figure'
+import { Sheet } from '../components/Sheet'
+import { Button, Chip, Muted, NumberInput, Row, Screen } from '../components/ui'
+import { EXERCISE_MAP } from '../data/exercises'
+import { hasMove } from '../data/moves'
 import { describeSet, progressAfterWorkout, stepLoad } from '../lib/program'
 import { getState, setState, todayStr, uid, useStore } from '../lib/store'
-import { C } from '../lib/theme'
+import { C, F } from '../lib/theme'
 import type { ExerciseLog, Feel, WorkoutLog } from '../lib/types'
 
 export default function Workout() {
@@ -21,6 +26,7 @@ export default function Workout() {
   const [rest, setRest] = useState<number | null>(null)
   const restRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [summary, setSummary] = useState<string[] | null>(null)
+  const [askFeel, setAskFeel] = useState(false)
 
   // aktif antrenman yoksa oluştur
   useEffect(() => {
@@ -62,10 +68,17 @@ export default function Workout() {
   if (summary) {
     return (
       <Screen padBottom={40}>
-        <H1>Antrenman bitti</H1>
-        <P muted style={{ marginBottom: 12 }}>{doneSets} set tamamlandı. Programın şöyle güncellendi:</P>
-        {summary.map((m, i) => <Card key={i} style={{ paddingVertical: 12 }}><P>{m}</P></Card>)}
-        <Button title="Tamam" onPress={() => router.replace('/(tabs)')} />
+        <Animated.Text entering={FadeInDown.springify()} style={st.kicker}>ANTRENMAN BİTTİ</Animated.Text>
+        <Animated.View entering={FadeInDown.delay(80).springify()} style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+          <Text style={st.big}>{doneSets}</Text><Text style={st.bigUnit}>set</Text>
+        </Animated.View>
+        <Text style={[st.sub, { marginBottom: 18 }]}>Programın şöyle güncellendi:</Text>
+        {summary.map((m, i) => (
+          <Animated.View key={i} entering={FadeInDown.delay(160 + i * 60).springify()} style={st.tile}>
+            <Text style={st.tileTxt}>{m}</Text>
+          </Animated.View>
+        ))}
+        <Button title="Tamam" style={{ marginTop: 10 }} onPress={() => router.replace('/(tabs)')} />
       </Screen>
     )
   }
@@ -79,6 +92,7 @@ export default function Workout() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {})
       const last = si === e.sets.length - 1
       if (!last) startRest(e.target.restSec)
+      else if (!e.feel) setTimeout(() => setAskFeel(true), 250)
     }
   }
   const setReps = (si: number, v: number | undefined) => update((w) => { const n = structuredClone(w); n.entries[cur].sets[si].reps = v ?? 0; return n })
@@ -120,75 +134,71 @@ export default function Workout() {
 
   const cancel = () => Alert.alert('Antrenmanı iptal et?', 'Bu antrenman kaydedilmez.', [{ text: 'Vazgeç' }, { text: 'İptal et', style: 'destructive', onPress: () => { setState({ activeWorkout: null }); router.back() } }])
 
+  const big = hasMove(ex.id)
+  const skipRest = () => { if (restRef.current) clearInterval(restRef.current); setRest(null) }
+  const feelOpts: [Feel, string, string][] = [['easy', 'Kolaydı', 'Daha fazlasını yapabilirdim'], ['ok', 'Tam kararında', 'Son tekrarlar zorladı'], ['hard', 'Zordu', 'Zar zor bitirdim / tamamlayamadım']]
+
   return (
     <Screen padBottom={40}>
-      <Row style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-        <View>
-          <Muted>{active.dayName}</Muted>
-          <H1 style={{ marginBottom: 0 }}>{doneSets}/{totalSets} set</H1>
-        </View>
-        <Button small kind="ghost" title="İptal" onPress={cancel} />
-      </Row>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Pressable onPress={cancel} hitSlop={10} style={st.round}><Ionicons name="close" size={20} color={C.muted} /></Pressable>
+        <Text style={st.kicker}>{active.dayName.toLocaleUpperCase('tr')}</Text>
+        <Pressable onPress={finish} hitSlop={10} style={[st.round, { width: undefined, paddingHorizontal: 16 }]}><Text style={{ color: C.accent, fontFamily: F.semi, fontSize: 14 }}>Bitir</Text></Pressable>
+      </View>
 
-      {/* hareket seçici */}
-      <Row style={{ marginVertical: 12, flexWrap: 'wrap' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginTop: 18 }}>
+        <Text style={st.big}>{doneSets}</Text>
+        <Text style={st.bigUnit}>/ {totalSets} set</Text>
+      </View>
+      <View style={{ flexDirection: 'row', gap: 5, marginTop: 10 }}>
         {entries.map((en, i) => {
-          const d = en.sets.filter((s) => s.done).length
-          const all = d === en.sets.length
-          return <Pressable key={i} onPress={() => setCur(i)} style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: all ? C.accent2 : i === cur ? C.accent : C.card2, borderWidth: 1, borderColor: i === cur ? C.accent : C.border }}>
-            <Text style={{ color: all || i === cur ? '#0b1020' : C.text, fontWeight: '700' }}>{i + 1}</Text>
-          </Pressable>
+          const d = en.sets.filter((x) => x.done).length
+          return (
+            <Pressable key={i} onPress={() => setCur(i)} hitSlop={{ top: 12, bottom: 12 }} style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.08)', overflow: 'hidden', borderWidth: i === cur ? 1 : 0, borderColor: C.text }}>
+              <View style={{ width: `${(d / en.sets.length) * 100}%`, height: '100%', backgroundColor: C.accent }} />
+            </Pressable>
+          )
         })}
-      </Row>
+      </View>
 
-      {rest !== null && (
-        <Card style={{ backgroundColor: 'rgba(34,211,238,0.12)', borderWidth: 1, borderColor: C.accent, alignItems: 'center' }}>
-          <Muted>Dinlen</Muted>
-          <Text style={{ color: C.accent, fontSize: 48, fontWeight: '800' }}>{Math.floor(rest / 60)}:{String(rest % 60).padStart(2, '0')}</Text>
-          <Row><Button small kind="ghost" title="+30 sn" onPress={() => setRest((v) => (v ?? 0) + 30)} /><Button small kind="secondary" title="Geç" onPress={() => { if (restRef.current) clearInterval(restRef.current); setRest(null) }} /></Row>
-        </Card>
-      )}
-
-      <Card>
-        <Pressable onPress={() => router.push(`/exercise/${ex.id}`)}>
-          <Row style={{ alignItems: 'center' }}>
-            <Image source={{ uri: imgUrl(ex, 0) }} style={{ width: 72, height: 72, borderRadius: 10, backgroundColor: '#fff' }} />
-            <View style={{ flex: 1 }}>
-              <H2 style={{ marginBottom: 2 }}>{ex.name}</H2>
-              <Muted>Hedef: {describeSet(e.target)}</Muted>
-              <Text style={{ color: C.accent, fontSize: 13, marginTop: 4 }}>Nasıl yapılır? ›</Text>
-            </View>
-          </Row>
+      <Animated.View key={cur} entering={FadeIn.duration(280)}>
+        <Pressable onPress={() => router.push(`/exercise/${ex.id}`)} style={{ alignItems: 'center', marginTop: big ? 0 : 18 }}>
+          <Figure id={ex.id} size={big ? 300 : 210} glow />
         </Pressable>
-        <Muted style={{ marginTop: 10, marginBottom: 6 }}>{ex.tips[0]}</Muted>
+        <Text style={st.kicker}>HAREKET {cur + 1}/{entries.length}</Text>
+        <Text style={st.name}>{ex.name}</Text>
+        <Text style={st.sub}>Hedef: {describeSet(e.target)}</Text>
+        <Pressable onPress={() => router.push(`/exercise/${ex.id}`)}><Text style={st.tip}>{ex.tips[0]}  <Text style={{ color: C.accent }}>Nasıl yapılır ›</Text></Text></Pressable>
 
         {e.target.weightKg !== undefined && (
-          <Row style={{ alignItems: 'center', justifyContent: 'space-between', marginVertical: 8 }}>
-            <Muted>Ağırlık{ex.load === 'dumbbell' ? ' (tek dambıl)' : ''}</Muted>
+          <View style={[st.tile, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }]}>
+            <Text style={st.tileTxt}>Ağırlık{ex.load === 'dumbbell' ? ' (tek dambıl)' : ''}</Text>
             <Row style={{ alignItems: 'center' }}>
-              <Button small kind="secondary" title="−" onPress={() => setW(-1)} />
-              <Text style={{ color: C.text, fontWeight: '800', fontSize: 18, minWidth: 70, textAlign: 'center' }}>{e.target.weightKg} kg</Text>
-              <Button small kind="secondary" title="+" onPress={() => setW(1)} />
+              <Pressable style={st.round} onPress={() => setW(-1)}><Ionicons name="remove" size={18} color={C.text} /></Pressable>
+              <Text style={{ color: C.text, fontFamily: F.display, fontSize: 18, minWidth: 76, textAlign: 'center' }}>{e.target.weightKg} kg</Text>
+              <Pressable style={st.round} onPress={() => setW(1)}><Ionicons name="add" size={18} color={C.text} /></Pressable>
             </Row>
-          </Row>
+          </View>
         )}
 
-        {e.sets.map((s, si) => (
-          <Row key={si} style={{ alignItems: 'center', marginBottom: 8 }}>
-            <Text style={{ color: C.muted, width: 44 }}>Set {si + 1}</Text>
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <NumberInput value={s.reps} onChange={(v) => setReps(si, v)} step={ex.unit === 'sec' ? 5 : 1} suffix={ex.unit === 'sec' ? 'sn' : 'tekrar'} />
+        <View style={{ marginTop: 12 }}>
+          {e.sets.map((x, si) => (
+            <View key={si} style={[st.tile, { flexDirection: 'row', alignItems: 'center', gap: 10 }, x.done && { borderColor: 'rgba(217,255,61,0.35)', backgroundColor: 'rgba(217,255,61,0.06)' }]}>
+              <Text style={[st.setIdx, x.done && { color: C.accent }]}>{String(si + 1).padStart(2, '0')}</Text>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <NumberInput value={x.reps} onChange={(v) => setReps(si, v)} step={ex.unit === 'sec' ? 5 : 1} suffix={ex.unit === 'sec' ? 'sn' : 'tekrar'} bare />
+              </View>
+              <Pressable accessibilityRole="button" accessibilityLabel={`Set ${si + 1} tamam`} onPress={() => toggleSet(si)} style={[st.check, x.done && { backgroundColor: C.accent, borderColor: C.accent }]}>
+                <Ionicons name="checkmark" size={24} color={x.done ? C.onAccent : C.muted} />
+              </Pressable>
             </View>
-            <Pressable onPress={() => toggleSet(si)} style={{ width: 48, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: s.done ? C.accent2 : C.card2, borderWidth: 1, borderColor: s.done ? C.accent2 : C.border }}>
-              <Text style={{ color: s.done ? '#0b1020' : C.text, fontSize: 20, fontWeight: '800' }}>✓</Text>
-            </Pressable>
-          </Row>
-        ))}
-        <Button small kind="ghost" title="+ set ekle" onPress={addSet} />
+          ))}
+          <Button small kind="ghost" title="+ set ekle" onPress={addSet} />
+        </View>
 
-        {e.sets.some((s) => s.done) && (
-          <View style={{ marginTop: 12 }}>
-            <Muted style={{ marginBottom: 6 }}>Bu hareket nasıldı?</Muted>
+        {e.sets.some((x) => x.done) && (
+          <View style={{ marginTop: 6 }}>
+            <Muted style={{ marginBottom: 8 }}>Bu hareket nasıldı?</Muted>
             <Row>
               <Chip label="Kolay" on={e.feel === 'easy'} onPress={() => setFeel('easy')} />
               <Chip label="Normal" on={e.feel === 'ok'} onPress={() => setFeel('ok')} />
@@ -196,13 +206,51 @@ export default function Workout() {
             </Row>
           </View>
         )}
-      </Card>
+      </Animated.View>
 
-      <Row>
+      <Row style={{ marginTop: 18 }}>
         {cur > 0 && <Button kind="ghost" title="Önceki" style={{ flex: 1 }} onPress={() => setCur(cur - 1)} />}
         {cur < entries.length - 1 ? <Button kind="secondary" title="Sonraki hareket" style={{ flex: 2 }} onPress={() => setCur(cur + 1)} /> : <Button title="Antrenmanı bitir" style={{ flex: 2 }} onPress={finish} />}
       </Row>
-      {cur < entries.length - 1 && <Button kind="ghost" title="Antrenmanı bitir" style={{ marginTop: 8 }} onPress={finish} />}
+
+      <Sheet visible={rest !== null} onClose={skipRest}>
+        <Text style={[st.kicker, { textAlign: 'center' }]}>DİNLEN</Text>
+        <Text style={[st.big, { textAlign: 'center', fontSize: 92, lineHeight: 100 }]}>{rest !== null ? `${Math.floor(rest / 60)}:${String(rest % 60).padStart(2, '0')}` : ''}</Text>
+        <Text style={[st.sub, { textAlign: 'center', marginBottom: 18 }]}>Sıradaki: Set {Math.min(e.sets.length, e.sets.filter((x) => x.done).length + 1)} · {describeSet(e.target)}</Text>
+        <Row>
+          <Button kind="secondary" title="+30 sn" style={{ flex: 1 }} onPress={() => setRest((v) => (v ?? 0) + 30)} />
+          <Button title="Hazırım" style={{ flex: 1 }} onPress={skipRest} />
+        </Row>
+      </Sheet>
+
+      <Sheet visible={askFeel} onClose={() => setAskFeel(false)}>
+        <Text style={st.kicker}>{ex.name.toLocaleUpperCase('tr')}</Text>
+        <Text style={[st.name, { marginBottom: 16 }]}>Nasıl geçti?</Text>
+        {feelOpts.map(([f, t, d]) => (
+          <Pressable key={f} onPress={() => { setFeel(f); setAskFeel(false); Haptics.selectionAsync().catch(() => {}) }} style={({ pressed }) => [st.tile, { flexDirection: 'row', alignItems: 'center' }, pressed && { backgroundColor: 'rgba(217,255,61,0.12)' }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: C.text, fontFamily: F.semi, fontSize: 16 }}>{t}</Text>
+              <Text style={st.sub}>{d}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={C.dim} />
+          </Pressable>
+        ))}
+        <Text style={[st.sub, { fontSize: 12, marginTop: 4 }]}>Bir sonraki antrenmanda ağırlığı/tekrarı buna göre ayarlıyorum.</Text>
+      </Sheet>
     </Screen>
   )
 }
+
+const st = StyleSheet.create({
+  kicker: { color: C.dim, fontFamily: F.medium, fontSize: 11, letterSpacing: 1.4 },
+  big: { color: C.accent, fontFamily: F.displayBold, fontSize: 76, letterSpacing: -4, lineHeight: 82, textShadowColor: 'rgba(217,255,61,0.25)', textShadowRadius: 36 },
+  bigUnit: { color: C.muted, fontFamily: F.display, fontSize: 18, marginLeft: 8, marginBottom: 14 },
+  name: { color: C.text, fontFamily: F.display, fontSize: 24, letterSpacing: -1, marginTop: 6 },
+  sub: { color: C.muted, fontFamily: F.light, fontSize: 14, marginTop: 4 },
+  tip: { color: C.dim, fontFamily: F.body, fontSize: 13, lineHeight: 19, marginTop: 10 },
+  tile: { backgroundColor: C.card, borderRadius: 22, borderWidth: 1, borderColor: C.border, padding: 14, marginBottom: 10 },
+  tileTxt: { color: C.text, fontFamily: F.body, fontSize: 15, lineHeight: 21 },
+  setIdx: { color: C.dim, fontFamily: F.display, fontSize: 15, width: 28 },
+  check: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border, backgroundColor: C.card2 },
+  round: { height: 40, width: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: C.card2, borderWidth: 1, borderColor: C.border },
+})

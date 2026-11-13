@@ -1,29 +1,29 @@
 import { router, useLocalSearchParams } from 'expo-router'
-import React, { useEffect, useState } from 'react'
-import { Image, Text, View } from 'react-native'
+import React from 'react'
+import { Text, View } from 'react-native'
+import { Figure } from '../../components/Figure'
 import { Button, Card, H1, H2, Muted, P, Screen } from '../../components/ui'
-import { EQUIPMENT, EXERCISE_MAP, PATTERN_NAMES, imgUrl } from '../../data/exercises'
-import { C } from '../../lib/theme'
+import { EQUIPMENT, EXERCISE_MAP, PATTERN_NAMES } from '../../data/exercises'
+import { hasMove } from '../../data/moves'
+import { C, F } from '../../lib/theme'
 
 export default function ExerciseDetail() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const ex = EXERCISE_MAP[id ?? '']
-  const [frame, setFrame] = useState<0 | 1>(0)
-  useEffect(() => { const t = setInterval(() => setFrame((f) => (f === 0 ? 1 : 0)), 900); return () => clearInterval(t) }, [])
   if (!ex) return <Screen><P>Hareket bulunamadı.</P></Screen>
   return (
     <Screen padBottom={40}>
       <H1>{ex.name}</H1>
       <Muted style={{ marginBottom: 12 }}>{PATTERN_NAMES[ex.pattern]} · {ex.muscles}</Muted>
-      <View style={{ borderRadius: 16, overflow: 'hidden', backgroundColor: '#fff', marginBottom: 12 }}>
-        <Image source={{ uri: imgUrl(ex, frame) }} style={{ width: '100%', aspectRatio: 1 }} resizeMode="contain" />
+      <View style={{ alignItems: 'center', marginVertical: 8 }}>
+        <Figure id={ex.id} size={hasMove(ex.id) ? 340 : 300} glow />
       </View>
-      <Muted style={{ textAlign: 'center', marginBottom: 12 }}>Başlangıç ↔ bitiş pozisyonu otomatik değişiyor</Muted>
+      {!hasMove(ex.id) ? <Muted style={{ textAlign: 'center', marginBottom: 12 }}>Başlangıç ↔ bitiş pozisyonu otomatik değişiyor</Muted> : null}
       <Card>
         <H2>Nasıl yapılır</H2>
         {ex.steps.map((s, i) => (
           <View key={i} style={{ flexDirection: 'row', marginBottom: 8 }}>
-            <Text style={{ color: C.accent, fontWeight: '800', width: 24 }}>{i + 1}</Text>
+            <Text style={{ color: C.accent, fontFamily: F.display, width: 26 }}>{i + 1}</Text>
             <P style={{ flex: 1 }}>{s}</P>
           </View>
         ))}

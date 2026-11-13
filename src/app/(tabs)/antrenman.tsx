@@ -1,11 +1,12 @@
 import { router } from 'expo-router'
 import React from 'react'
-import { Alert, Image, Text, View } from 'react-native'
+import { Alert, Text, View } from 'react-native'
 import { Button, Card, H1, H2, Muted, P, Row, Screen } from '../../components/ui'
-import { EXERCISE_MAP, imgUrl, PATTERN_NAMES } from '../../data/exercises'
+import { Figure } from '../../components/Figure'
+import { EXERCISE_MAP, PATTERN_NAMES } from '../../data/exercises'
 import { describeSet, generateProgram, LEVEL_NAMES } from '../../lib/program'
 import { setState, useStore } from '../../lib/store'
-import { C } from '../../lib/theme'
+import { C, F } from '../../lib/theme'
 import type { Pattern } from '../../lib/types'
 
 export default function Antrenman() {
@@ -35,7 +36,7 @@ export default function Antrenman() {
         <Card key={di} style={di === nextIdx ? { borderWidth: 1, borderColor: C.accent } : undefined}>
           <Row style={{ justifyContent: 'space-between', marginBottom: 8 }}>
             <H2 style={{ marginBottom: 0 }}>{d.name}</H2>
-            {di === nextIdx && <Text style={{ color: C.accent, fontWeight: '700' }}>Sıradaki</Text>}
+            {di === nextIdx && <Text style={{ color: C.accent, fontFamily: F.medium }}>Sıradaki</Text>}
           </Row>
           {d.items.map((it, k) => {
             const ex = EXERCISE_MAP[it.exerciseId]
@@ -43,9 +44,9 @@ export default function Antrenman() {
             const cur = pr ? { ...it, reps: pr.reps, weightKg: pr.weightKg } : it
             return (
               <Row key={k} style={{ marginBottom: 8, alignItems: 'center' }}>
-                <Image source={{ uri: imgUrl(ex, 0) }} style={{ width: 44, height: 44, borderRadius: 8, backgroundColor: '#fff' }} />
+                <Figure id={ex.id} size={52} />
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: C.text, fontWeight: '600' }} onPress={() => router.push(`/exercise/${ex.id}`)}>{ex.name}</Text>
+                  <Text style={{ color: C.text, fontFamily: F.medium, fontSize: 15 }} onPress={() => router.push(`/exercise/${ex.id}`)}>{ex.name}</Text>
                   <Muted>{describeSet(cur)}</Muted>
                 </View>
               </Row>

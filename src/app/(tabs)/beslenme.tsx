@@ -41,7 +41,7 @@ export default function Beslenme() {
         <Bar value={kcal} max={tg.kcal} color={kcal > tg.kcal * 1.1 ? C.danger : C.accent} height={10} />
         <Row style={{ marginTop: 12 }}>
           <Macro label="Protein" v={sum('protein')} t={tg.protein} color={C.accent2} />
-          <Macro label="Karb" v={sum('carbs')} t={tg.carbs} color={C.warn} />
+          <Macro label="Karb" v={sum('carbs')} t={tg.carbs} color={C.carb} />
           <Macro label="Yağ" v={sum('fat')} t={tg.fat} color={C.purple} />
         </Row>
       </Card>
