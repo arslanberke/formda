@@ -1,11 +1,11 @@
 import { router } from 'expo-router'
 import React, { useState } from 'react'
 import { Alert, Text, View } from 'react-native'
-import { Button, Card, Chip, H1, H2, Input, Muted, NumberInput, P, Row, Screen, Segment, Wrap } from '../components/ui'
+import { Button, Card, Chip, H1, H2, Input, Muted, NumberInput, P, Row, Screen, Segment, Steps, Wrap } from '../components/ui'
 import { EQUIPMENT } from '../data/exercises'
 import { generateProgram } from '../lib/program'
 import { setState, todayStr, useStore } from '../lib/store'
-import { C } from '../lib/theme'
+import { C, F } from '../lib/theme'
 import type { Activity, EquipmentId, Goal, Profile, Sex } from '../lib/types'
 
 const DB_PRESETS = [2, 3, 4, 5, 6, 7.5, 8, 10, 12, 12.5, 14, 15, 16, 17.5, 20, 22.5, 25, 30]
@@ -65,7 +65,7 @@ export default function Onboarding() {
 
   return (
     <Screen padBottom={40}>
-      <Muted style={{ marginBottom: 6 }}>Adım {step + 1} / 4</Muted>
+      <Steps n={4} i={step} label={`Adım ${step + 1} / 4`} />
       {step === 0 && (
         <View>
           <H1>Seni tanıyalım</H1>
@@ -86,7 +86,7 @@ export default function Onboarding() {
           <Card>
             {([['lose', 'Yağ yakmak / kilo vermek', 'Günlük ~500 kcal açık, yüksek protein'], ['maintain', 'Formda kalmak', 'Kilonu koru, güçlen'], ['gain', 'Kas yapmak / kilo almak', 'Günlük ~300 kcal fazla']] as [Goal, string, string][]).map(([g, t, d]) => (
               <Card key={g} onPress={() => setGoal(g)} style={{ backgroundColor: goal === g ? 'rgba(34,211,238,0.12)' : C.card2, borderWidth: 1, borderColor: goal === g ? C.accent : C.border }}>
-                <Text style={{ color: C.text, fontWeight: '700', fontSize: 16 }}>{t}</Text>
+                <Text style={{ color: C.text, fontFamily: F.semi, fontSize: 16 }}>{t}</Text>
                 <Muted>{d}</Muted>
               </Card>
             ))}

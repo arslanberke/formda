@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
-import { Alert, Pressable, Text, View, useWindowDimensions } from 'react-native'
-import Svg, { Circle, Line, Path, Text as SvgText } from 'react-native-svg'
-import { Button, Card, H1, H2, Muted, NumberInput, Row, Screen, Stat } from '../../components/ui'
+import { Alert, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native'
+import Animated, { FadeInDown } from 'react-native-reanimated'
+import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop, Text as SvgText } from 'react-native-svg'
+import { CountUp } from '../../components/motion'
+import { Button, Card, H2, Muted, NumberInput, Row, Screen } from '../../components/ui'
 import { bmi, bmiLabel } from '../../lib/nutrition'
 import { setState, todayStr, useStore } from '../../lib/store'
-import { C } from '../../lib/theme'
+import { C, F } from '../../lib/theme'
 import type { BodyEntry } from '../../lib/types'
 
 const FIELDS: { k: keyof BodyEntry; name: string }[] = [
@@ -41,21 +43,23 @@ export default function Vucut() {
 
   return (
     <Screen>
-      <H1>Vücut</H1>
-      <Card>
-        <Row>
-          <Stat label="Şu an" value={last ? `${last.weightKg} kg` : '—'} />
-          <Stat label="7 gün ort." value={avg7 ? `${avg7} kg` : '—'} />
-          <Stat label="Toplam" value={last && first ? `${diff > 0 ? '+' : ''}${diff} kg` : '—'} color={diff < 0 ? C.accent2 : diff > 0 ? C.warn : undefined} />
-        </Row>
-        {last && <Muted style={{ marginTop: 8 }}>VKİ {b.toFixed(1)} · {bmiLabel(b)}</Muted>}
-      </Card>
+      <Animated.View entering={FadeInDown.delay(60).springify().damping(16)}>
+        <Text style={v.kicker}>VÜCUT · ŞU AN</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+          {last ? <CountUp to={last.weightKg} decimals={last.weightKg % 1 ? 1 : 0} style={v.big} /> : <Text style={v.big}>—</Text>}
+          <Text style={v.bigUnit}>kg</Text>
+        </View>
+        <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 4, marginBottom: 18 }}>
+          {last && first && body.length > 1 ? <Text style={[v.pill, { color: diff < 0 ? C.accent : diff > 0 ? C.warn : C.text }]}>{diff > 0 ? '+' : ''}{diff} kg toplam</Text> : null}
+          {avg7 ? <Text style={v.pill}>7 gün ort. {avg7} kg</Text> : null}
+          {last ? <Text style={v.pill}>VKİ {b.toFixed(1)} · {bmiLabel(b)}</Text> : null}
+        </View>
+      </Animated.View>
 
       {body.length >= 2 && (
-        <Card>
-          <H2>Kilo grafiği</H2>
-          <Chart data={body.slice(-30)} width={width - 32 - 32} />
-        </Card>
+        <Animated.View entering={FadeInDown.delay(140).springify().damping(16)} style={{ marginBottom: 14, marginHorizontal: -4 }}>
+          <Chart data={body.slice(-30)} width={width - 32} />
+        </Animated.View>
       )}
 
       <Card>
@@ -74,8 +78,8 @@ export default function Vucut() {
             <Pressable key={e.date} onLongPress={() => Alert.alert('Sil?', e.date, [{ text: 'Vazgeç' }, { text: 'Sil', style: 'destructive', onPress: () => setState((s) => ({ body: s.body.filter((x) => x.date !== e.date) })) }])}>
               <Card style={{ paddingVertical: 10 }}>
                 <Row style={{ justifyContent: 'space-between' }}>
-                  <Text style={{ color: C.text }}>{e.date}</Text>
-                  <Text style={{ color: C.text, fontWeight: '700' }}>{e.weightKg} kg</Text>
+                  <Text style={{ color: C.muted, fontFamily: F.body }}>{e.date.split('-').reverse().join('.')}</Text>
+                  <Text style={{ color: C.text, fontFamily: F.display, fontSize: 15 }}>{e.weightKg} kg</Text>
                 </Row>
                 {FIELDS.some((f) => e[f.k] !== undefined) && <Muted>{FIELDS.filter((f) => e[f.k] !== undefined).map((f) => `${f.name} ${e[f.k]}`).join(' · ')}</Muted>}
               </Card>
@@ -90,7 +94,7 @@ export default function Vucut() {
 function addDaysStr(n: number) { const d = new Date(); d.setDate(d.getDate() + n); return todayStr(d) }
 
 function Chart({ data, width }: { data: BodyEntry[]; width: number }) {
-  const h = 160, padL = 36, padB = 20, padT = 10
+  const h = 190, padL = 34, padB = 22, padT = 14
   const ws = data.map((d) => d.weightKg)
   const min = Math.floor(Math.min(...ws) - 0.5), max = Math.ceil(Math.max(...ws) + 0.5)
   const x = (i: number) => padL + (i / Math.max(1, data.length - 1)) * (width - padL - 8)
@@ -99,14 +103,28 @@ function Chart({ data, width }: { data: BodyEntry[]; width: number }) {
   const ticks = [min, (min + max) / 2, max]
   return (
     <Svg width={width} height={h}>
+      <Defs>
+        <LinearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor={C.accent} stopOpacity={0.28} />
+          <Stop offset="1" stopColor={C.accent} stopOpacity={0} />
+        </LinearGradient>
+      </Defs>
+      <Path d={`${path} L${x(data.length - 1).toFixed(1)},${h - padB} L${x(0).toFixed(1)},${h - padB} Z`} fill="url(#wg)" />
       {ticks.map((t) => <React.Fragment key={t}>
-        <Line x1={padL} x2={width} y1={y(t)} y2={y(t)} stroke={C.border} strokeWidth={1} />
-        <SvgText x={0} y={y(t) + 4} fill={C.muted} fontSize={11}>{t.toFixed(1)}</SvgText>
+        <Line x1={padL} x2={width} y1={y(t)} y2={y(t)} stroke="rgba(255,255,255,0.06)" strokeWidth={1} strokeDasharray="3 5" />
+        <SvgText x={0} y={y(t) + 4} fill={C.dim} fontSize={11} fontFamily={F.body}>{t.toFixed(1)}</SvgText>
       </React.Fragment>)}
-      <Path d={path} stroke={C.accent} strokeWidth={2.5} fill="none" />
-      {data.map((d, i) => <Circle key={d.date} cx={x(i)} cy={y(d.weightKg)} r={3} fill={C.accent} />)}
-      <SvgText x={padL} y={h - 4} fill={C.muted} fontSize={11}>{data[0].date.slice(5)}</SvgText>
-      <SvgText x={width - 40} y={h - 4} fill={C.muted} fontSize={11}>{data[data.length - 1].date.slice(5)}</SvgText>
+      <Path d={path} stroke={C.accent} strokeWidth={2.5} fill="none" strokeLinejoin="round" strokeLinecap="round" />
+      {data.map((d, i) => <Circle key={d.date} cx={x(i)} cy={y(d.weightKg)} r={i === data.length - 1 ? 5 : 2.5} fill={i === data.length - 1 ? C.accent : C.bg} stroke={C.accent} strokeWidth={1.5} />)}
+      <SvgText x={padL} y={h - 4} fill={C.dim} fontSize={11} fontFamily={F.body}>{data[0].date.slice(5)}</SvgText>
+      <SvgText x={width - 40} y={h - 4} fill={C.dim} fontSize={11} fontFamily={F.body}>{data[data.length - 1].date.slice(5)}</SvgText>
     </Svg>
   )
 }
+
+const v = StyleSheet.create({
+  kicker: { color: C.dim, fontFamily: F.medium, fontSize: 11, letterSpacing: 1.4 },
+  big: { color: C.accent, fontFamily: F.displayBold, fontSize: 92, letterSpacing: -5, lineHeight: 100, marginTop: 6, textShadowColor: 'rgba(217,255,61,0.25)', textShadowRadius: 36 },
+  bigUnit: { color: C.accent, fontFamily: F.display, fontSize: 20, marginLeft: 6, marginBottom: 16, opacity: 0.8 },
+  pill: { color: C.text, fontFamily: F.medium, fontSize: 12, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, backgroundColor: C.card2, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
+})

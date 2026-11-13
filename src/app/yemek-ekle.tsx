@@ -4,7 +4,7 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 import { Button, Card, Chip, H1, H2, Input, Muted, NumberInput, Row, Screen, Wrap } from '../components/ui'
 import { searchFoods, searchOpenFoodFacts, type Food } from '../data/foods'
 import { setState, todayStr, uid, useStore } from '../lib/store'
-import { C } from '../lib/theme'
+import { C, F } from '../lib/theme'
 import type { Meal } from '../lib/types'
 import { MEALS } from './(tabs)/beslenme'
 
@@ -73,7 +73,7 @@ export default function FoodAdd() {
           </Wrap>
         </Card>
         <Card>
-          <Text style={{ color: C.text, fontSize: 32, fontWeight: '800' }}>{Math.round(sel.kcal * k)} <Text style={{ fontSize: 16, color: C.muted }}>kcal</Text></Text>
+          <Text style={{ color: C.text, fontSize: 32, fontFamily: F.semi }}>{Math.round(sel.kcal * k)} <Text style={{ fontSize: 16, color: C.muted }}>kcal</Text></Text>
           <Muted>Protein {Math.round(sel.p * k)} g · Karb {Math.round(sel.c * k)} g · Yağ {Math.round(sel.f * k)} g</Muted>
         </Card>
         <Row>
@@ -137,8 +137,8 @@ function FoodRow({ f, onPress }: { f: Food; onPress: () => void }) {
   return (
     <Pressable onPress={onPress} style={{ paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.border }}>
       <Row style={{ justifyContent: 'space-between' }}>
-        <Text style={{ color: C.text, flex: 1, fontWeight: '600' }} numberOfLines={1}>{f.name}</Text>
-        <Text style={{ color: C.accent, fontWeight: '700' }}>{Math.round(f.kcal)} kcal</Text>
+        <Text style={{ color: C.text, flex: 1, fontFamily: F.medium }} numberOfLines={1}>{f.name}</Text>
+        <Text style={{ color: C.accent, fontFamily: F.semi }}>{Math.round(f.kcal)} kcal</Text>
       </Row>
       <Muted>100 g · P {f.p} · K {f.c} · Y {f.f}{f.portion ? ` · ${f.portion[1]} ≈ ${Math.round(f.kcal * f.portion[0] / 100)} kcal` : ''}</Muted>
     </Pressable>

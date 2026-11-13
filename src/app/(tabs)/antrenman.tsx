@@ -30,8 +30,12 @@ export default function Antrenman() {
 
   return (
     <Screen>
-      <H1>Programın</H1>
-      <Muted style={{ marginBottom: 12 }}>{program.split === 'full' ? 'Tüm vücut' : 'Üst / Alt'} · haftada {profile.daysPerWeek} gün · {done.length} antrenman tamamlandı</Muted>
+      <Text style={{ color: C.dim, fontFamily: F.medium, fontSize: 11, letterSpacing: 1.4 }}>{program.split === 'full' ? 'TÜM VÜCUT' : 'ÜST / ALT'} · HAFTADA {profile.daysPerWeek} GÜN</Text>
+      <Text style={{ color: C.text, fontFamily: F.display, fontSize: 30, letterSpacing: -1.4, marginTop: 6 }}>Programın</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginBottom: 16 }}>
+        <Text style={{ color: C.accent, fontFamily: F.displayBold, fontSize: 64, letterSpacing: -4, lineHeight: 72, textShadowColor: 'rgba(217,255,61,0.25)', textShadowRadius: 30 }}>{done.length}</Text>
+        <Text style={{ color: C.muted, fontFamily: F.body, fontSize: 14, marginLeft: 8, marginBottom: 14 }}>antrenman tamamlandı</Text>
+      </View>
       {program.days.map((d, di) => (
         <Card key={di} style={di === nextIdx ? { borderWidth: 1, borderColor: C.accent } : undefined}>
           <Row style={{ justifyContent: 'space-between', marginBottom: 8 }}>
@@ -59,9 +63,12 @@ export default function Antrenman() {
       <H2>Seviyelerin</H2>
       <Card>
         {(Object.keys(assessment.levels) as Pattern[]).filter((k) => k !== 'cardio').map((k) => (
-          <Row key={k} style={{ justifyContent: 'space-between', marginBottom: 6 }}>
-            <Text style={{ color: C.text }}>{PATTERN_NAMES[k]}</Text>
-            <Text style={{ color: C.accent, fontWeight: '700' }}>{LEVEL_NAMES[assessment.levels[k] ?? 0]}</Text>
+          <Row key={k} style={{ alignItems: 'center', marginBottom: 10 }}>
+            <Text style={{ color: C.text, fontFamily: F.body, fontSize: 15, flex: 1 }}>{PATTERN_NAMES[k]}</Text>
+            <View style={{ flexDirection: 'row', gap: 3, marginRight: 10 }}>
+              {[0, 1, 2, 3].map((n) => <View key={n} style={{ width: 16, height: 6, borderRadius: 3, backgroundColor: n <= (assessment.levels[k] ?? 0) ? C.accent : 'rgba(255,255,255,0.08)' }} />)}
+            </View>
+            <Text style={{ color: C.accent, fontFamily: F.medium, fontSize: 13, width: 72, textAlign: 'right' }}>{LEVEL_NAMES[assessment.levels[k] ?? 0]}</Text>
           </Row>
         ))}
         <Muted style={{ marginTop: 6 }}>Son test: {assessment.date}</Muted>
@@ -77,7 +84,7 @@ export default function Antrenman() {
           {[...done].reverse().slice(0, 20).map((w) => (
             <Card key={w.id} style={{ paddingVertical: 12 }}>
               <Row style={{ justifyContent: 'space-between' }}>
-                <Text style={{ color: C.text, fontWeight: '600' }}>{w.dayName}</Text>
+                <Text style={{ color: C.text, fontFamily: F.medium, fontSize: 15 }}>{w.dayName}</Text>
                 <Muted>{w.date}</Muted>
               </Row>
               <Muted>{w.entries.filter((e) => e.sets.some((s) => s.done)).length} hareket · {w.entries.reduce((a, e) => a + e.sets.filter((s) => s.done).length, 0)} set{w.finishedAt && w.startedAt ? ` · ${Math.round((new Date(w.finishedAt).getTime() - new Date(w.startedAt).getTime()) / 60000)} dk` : ''}</Muted>

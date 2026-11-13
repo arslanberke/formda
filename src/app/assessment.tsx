@@ -1,12 +1,12 @@
 import { router } from 'expo-router'
 import React, { useEffect, useRef, useState } from 'react'
 import { Alert, Text, View } from 'react-native'
-import { Button, Card, Chip, H1, H2, Muted, NumberInput, P, Row, Screen, Wrap } from '../components/ui'
+import { Button, Card, Chip, H1, H2, Muted, NumberInput, P, Row, Screen, Steps, Wrap } from '../components/ui'
 import { Figure } from '../components/Figure'
 import { EXERCISE_MAP, PATTERN_NAMES } from '../data/exercises'
 import { evaluate, generateProgram, LEVEL_NAMES, testsFor, availableLoads } from '../lib/program'
 import { getState, setState, useStore } from '../lib/store'
-import { C } from '../lib/theme'
+import { C, F } from '../lib/theme'
 import type { Pattern } from '../lib/types'
 
 export default function Assessment() {
@@ -60,7 +60,7 @@ export default function Assessment() {
               <Text style={{ color: C.text }}>{PATTERN_NAMES[k]}</Text>
               <Row>
                 {[0, 1, 2, 3].map((l) => <View key={l} style={{ width: 18, height: 8, borderRadius: 4, backgroundColor: l <= (a.levels[k] ?? 0) ? C.accent : C.card2 }} />)}
-                <Text style={{ color: C.accent, fontWeight: '700', width: 80, textAlign: 'right' }}>{LEVEL_NAMES[a.levels[k] ?? 0]}</Text>
+                <Text style={{ color: C.accent, fontFamily: F.semi, width: 80, textAlign: 'right' }}>{LEVEL_NAMES[a.levels[k] ?? 0]}</Text>
               </Row>
             </Row>
           ))}
@@ -68,7 +68,7 @@ export default function Assessment() {
         <H2>Programın: {prog.split === 'full' ? 'Tüm vücut' : 'Üst / Alt'} · haftada {profile.daysPerWeek} gün</H2>
         {prog.days.map((d, di) => (
           <Card key={di}>
-            <Text style={{ color: C.accent, fontWeight: '700', marginBottom: 6 }}>{d.name}</Text>
+            <Text style={{ color: C.accent, fontFamily: F.semi, marginBottom: 6 }}>{d.name}</Text>
             {d.items.map((it, k) => (
               <Text key={k} style={{ color: C.text, marginBottom: 2 }}>• {EXERCISE_MAP[it.exerciseId].name} — {it.sets}×{it.reps}{EXERCISE_MAP[it.exerciseId].unit === 'sec' ? ' sn' : ''}{it.weightKg !== undefined ? ` @ ${it.weightKg} kg` : ''}</Text>
             ))}
@@ -86,7 +86,7 @@ export default function Assessment() {
         <P muted style={{ marginBottom: 12 }}>{tests.length} test. Her birinde elinden gelenin en iyisini yap ama formu bozma; sakatlanmak yok.</P>
         {tests.map((tt, k) => (
           <Card key={tt.id}>
-            <Text style={{ color: C.text, fontWeight: '700' }}>{k + 1}. {tt.title}</Text>
+            <Text style={{ color: C.text, fontFamily: F.semi }}>{k + 1}. {tt.title}</Text>
             <Muted>{tt.desc}</Muted>
           </Card>
         ))}
@@ -105,15 +105,15 @@ export default function Assessment() {
 
   return (
     <Screen padBottom={40}>
-      <Muted>Test {i + 1} / {tests.length}</Muted>
+      <Steps n={tests.length} i={i} label={`Test ${i + 1} / ${tests.length}`} />
       <H1>{t.title}</H1>
       {ex && (
-        <Card>
-          <View style={{ alignItems: 'center', marginBottom: 8 }}><Figure id={ex.id} size={220} glow /></View>
-          <Text style={{ color: C.accent, fontWeight: '700', marginBottom: 6 }}>{ex.name}</Text>
+        <View>
+          <View style={{ alignItems: 'center', marginBottom: 8 }}><Figure id={ex.id} size={260} glow /></View>
+          <Text style={{ color: C.accent, fontFamily: F.semi, marginBottom: 6 }}>{ex.name}</Text>
           {ex.steps.map((s, k) => <P key={k} style={{ marginBottom: 4 }}>{k + 1}. {s}</P>)}
           <Button small kind="ghost" title="Hareketi detaylı gör" style={{ marginTop: 8 }} onPress={() => router.push(`/exercise/${ex.id}`)} />
-        </Card>
+        </View>
       )}
       <Card>
         <P muted style={{ marginBottom: 10 }}>{t.desc}</P>
@@ -140,7 +140,7 @@ export default function Assessment() {
         )}
         {t.kind === 'hold' && (
           <View style={{ alignItems: 'center', marginBottom: 12 }}>
-            <Text style={{ color: C.text, fontSize: 56, fontWeight: '800' }}>{timer ?? 0}<Text style={{ fontSize: 20, color: C.muted }}> sn</Text></Text>
+            <Text style={{ color: C.text, fontSize: 56, fontFamily: F.semi }}>{timer ?? 0}<Text style={{ fontSize: 20, color: C.muted }}> sn</Text></Text>
             <Button small kind="secondary" title={timer === null ? 'Kronometreyi başlat' : 'Durdur ve kaydet'} onPress={() => {
               if (timer === null) startTimer(0, true)
               else { const v = stopTimer(); if (v !== null) setResults({ ...results, [t.id]: v }) }

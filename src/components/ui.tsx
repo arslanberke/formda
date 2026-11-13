@@ -21,6 +21,16 @@ export function Card({ children, style, onPress }: { children: React.ReactNode; 
 export function H1({ children, style }: { children: React.ReactNode; style?: any }) { return <Text style={[styles.h1, style]}>{children}</Text> }
 export function H2({ children, style }: { children: React.ReactNode; style?: any }) { return <Text style={[styles.h2, style]}>{children}</Text> }
 export function P({ children, style, muted }: { children: React.ReactNode; style?: any; muted?: boolean }) { return <Text style={[styles.p, muted && { color: C.muted, fontSize: 14 }, style]}>{children}</Text> }
+export function Steps({ n, i, label }: { n: number; i: number; label?: string }) {
+  return (
+    <View style={{ marginBottom: 18 }}>
+      <View style={{ flexDirection: 'row', gap: 5 }}>
+        {Array.from({ length: n }).map((_, k) => <View key={k} style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: k <= i ? C.accent : 'rgba(255,255,255,0.08)' }} />)}
+      </View>
+      {label ? <Text style={{ color: C.dim, fontFamily: F.medium, fontSize: 11, letterSpacing: 1.4, marginTop: 10 }}>{label.toLocaleUpperCase('tr')}</Text> : null}
+    </View>
+  )
+}
 export function Muted({ children, style }: { children: React.ReactNode; style?: any }) { return <Text style={[styles.muted, style]}>{children}</Text> }
 
 export function Button({ title, onPress, kind = 'primary', disabled, style, small, loading }: { title: string; onPress?: () => void; kind?: 'primary' | 'secondary' | 'ghost' | 'danger'; disabled?: boolean; style?: StyleProp<ViewStyle>; small?: boolean; loading?: boolean }) {
