@@ -9,7 +9,8 @@ import { CountUp } from '../../components/motion'
 import { Button, Card, Chip, H2, Muted, P, Row, Screen, Wrap } from '../../components/ui'
 import { applyReminders, WEEKDAYS } from '../../lib/reminders'
 import { EQUIPMENT } from '../../data/exercises'
-import { age, targets, tdee } from '../../lib/nutrition'
+import { useEnergy } from '../../lib/energy'
+import { age } from '../../lib/nutrition'
 import { exportJson, replaceState, resetState, setState, useStore } from '../../lib/store'
 import { C, F } from '../../lib/theme'
 import type { AppState } from '../../lib/types'
@@ -30,7 +31,7 @@ export default function Profil() {
     Alert.alert(r ? 'Hatırlatıcı kuruldu' : 'Hatırlatıcı kapatıldı', r ? `${remDays.length} gün, saat ${String(remHour).padStart(2, '0')}:00` : '')
   }
   const workouts = useStore((s) => s.workouts.filter((w) => w.finishedAt).length)
-  const tg = targets(profile, weightKg)
+  const { tg, m } = useEnergy()
 
   const doExport = async () => {
     try {
@@ -62,7 +63,7 @@ export default function Profil() {
           <Text style={pf.bigUnit}>kcal</Text>
         </View>
         <View style={{ flexDirection: 'row', gap: 10, marginTop: 10, marginBottom: 16 }}>
-          {([['Harcadığın', `${Math.round(tdee(profile, weightKg))}`, 'kcal/gün'], ['Antrenman', `${workouts}`, 'tamamlandı'], ['Su', (tg.waterMl / 1000).toFixed(1), 'L / gün']] as const).map(([l, val, u]) => (
+          {([['Bakım', `${m.kcal}`, m.adaptive ? 'kcal · verinden' : 'kcal · formül'], ['Antrenman', `${workouts}`, 'tamamlandı'], ['Su', (tg.waterMl / 1000).toFixed(1), 'L / gün']] as const).map(([l, val, u]) => (
             <View key={l} style={pf.stat}>
               <Text style={pf.statL}>{l.toLocaleUpperCase('tr')}</Text>
               <Text style={pf.statV}>{val}</Text>
@@ -73,6 +74,9 @@ export default function Profil() {
       </Animated.View>
       <Card>
         <Muted>Hedef makrolar: protein {tg.protein} g · karb {tg.carbs} g · yağ {tg.fat} g</Muted>
+        <Muted style={{ marginTop: 6 }}>{m.adaptive
+          ? `Bakım kalorin son 4 haftadaki yemek ve tartı kayıtlarından hesaplandı (${m.loggedDays} gün). Formül ${m.formula} diyordu, verin ${m.observed} diyor.`
+          : `Bakım kalorin şimdilik formülle tahmin. ${m.needDays} gün yemek + 2 haftaya yayılmış 3 tartı kaydından sonra gerçek verine göre kendini düzeltecek (${m.loggedDays}/${m.needDays} gün).`}</Muted>
         <Text style={{ color: C.text, marginTop: 8, fontFamily: F.body, fontSize: 15, lineHeight: 21 }}>Ekipman: {profile.equipment.map((e) => EQUIPMENT.find((q) => q.id === e)?.name).filter(Boolean).join(', ')}</Text>
         {profile.dumbbells.length > 0 && <Muted>Dambıl: {profile.dumbbells.join(', ')} kg</Muted>}
         <Button title="Profili / ekipmanı düzenle" kind="secondary" style={{ marginTop: 12 }} onPress={() => router.push('/onboarding')} />

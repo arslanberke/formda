@@ -37,7 +37,15 @@
       ],
       "expo-sharing",
       "./plugins/withoutPushEntitlement",
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "Formda adımını, saatin aktif kalorisini ve koşu antrenmanlarını günlük harcamanı hesaplamak için okur.",
+          "NSHealthUpdateUsageDescription": false,
+          "background": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

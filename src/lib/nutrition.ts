@@ -14,8 +14,9 @@ export function tdee(p: Profile, weightKg: number) { return bmr(p, weightKg) * A
 
 export interface Targets { kcal: number; protein: number; carbs: number; fat: number; waterMl: number }
 
-export function targets(p: Profile, weightKg: number): Targets {
-  const t = tdee(p, weightKg)
+// maintenanceKcal: uyarlamalı bakım kalorisi (lib/energy); yoksa formül
+export function targets(p: Profile, weightKg: number, maintenanceKcal?: number): Targets {
+  const t = maintenanceKcal ?? tdee(p, weightKg)
   const adj: Record<Goal, number> = { lose: -500, maintain: 0, gain: 300 }
   const floor = p.sex === 'm' ? 1500 : 1200
   const kcal = Math.round(Math.max(floor, t + adj[p.goal]) / 10) * 10

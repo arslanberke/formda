@@ -5,7 +5,7 @@ import { Alert, Pressable, StyleSheet, Text, View } from 'react-native'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import { CountUp, Ring } from '../../components/motion'
 import { Muted, Screen } from '../../components/ui'
-import { targets } from '../../lib/nutrition'
+import { useEnergy } from '../../lib/energy'
 import { addDays, setState, todayStr, useStore } from '../../lib/store'
 import { C, F } from '../../lib/theme'
 import type { Meal } from '../../lib/types'
@@ -15,12 +15,10 @@ export const MEALS: { id: Meal; name: string }[] = [
 ]
 
 export default function Beslenme() {
-  const profile = useStore((s) => s.profile)!
   const foods = useStore((s) => s.foods)
   const water = useStore((s) => s.water)
-  const weightKg = useStore((s) => s.body[s.body.length - 1]?.weightKg ?? 75)
   const [date, setDate] = useState(todayStr())
-  const tg = targets(profile, weightKg)
+  const { tg } = useEnergy()
   const day = foods.filter((f) => f.date === date)
   const sum = (k: 'kcal' | 'protein' | 'carbs' | 'fat') => Math.round(day.reduce((a, f) => a + f[k], 0))
   const kcal = sum('kcal')

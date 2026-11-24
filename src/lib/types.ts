@@ -98,6 +98,7 @@ export interface CardioLog {
   avgHr?: number
   kcal?: number
   inclinePct?: number
+  hkId?: string // Apple Sağlık antrenman kimliği (tekrar içe almamak için)
 }
 
 export interface AppState {
@@ -114,4 +115,8 @@ export interface AppState {
   activeWorkout: WorkoutLog | null
   cardio: CardioLog[]
   reminders?: { days: number[]; hour: number; minute: number } | null
+  activity?: Record<string, DayActivity> // date -> günlük hareket
 }
+
+// Apple Watch "Hareket" halkası = aktif kalori (dinlenme hariç, adım + antrenman dahil)
+export interface DayActivity { steps?: number; activeKcal?: number; source?: 'manual' | 'health' }

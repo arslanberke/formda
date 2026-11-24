@@ -8,7 +8,7 @@ import { CountUp, Ring } from '../../components/motion'
 import { Bar, Screen } from '../../components/ui'
 import { EXERCISE_MAP } from '../../data/exercises'
 import { hasMove } from '../../data/moves'
-import { targets } from '../../lib/nutrition'
+import { useEnergy } from '../../lib/energy'
 import { describeSet } from '../../lib/program'
 import { addDays, todayStr, useStore } from '../../lib/store'
 import { C, F } from '../../lib/theme'
@@ -40,7 +40,7 @@ export default function Home() {
   const today = todayStr()
   const now = new Date()
   const weightKg = body[body.length - 1]?.weightKg ?? 75
-  const tg = targets(profile, weightKg)
+  const { tg, burn } = useEnergy()
   const todayFoods = foods.filter((f) => f.date === today)
   const kcal = Math.round(todayFoods.reduce((a, f) => a + f.kcal, 0))
   const sum = (k: 'protein' | 'carbs' | 'fat') => Math.round(todayFoods.reduce((a, f) => a + f[k], 0))
@@ -139,7 +139,41 @@ export default function Home() {
         </Pressable>
       </Animated.View>
 
-      <Animated.View entering={enter(6)} style={{ flexDirection: 'row', gap: 12 }}>
+      {burn ? (
+        <Animated.View entering={enter(6)}>
+          <Pressable onPress={() => router.push('/aktivite')} style={s.card}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <View>
+                <Text style={s.kicker}>BUGÜN HARCANAN</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+                  <CountUp to={burn.total} style={s.mid} />
+                  <Text style={s.midUnit}>kcal</Text>
+                </View>
+              </View>
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={s.kicker}>{burn.total - kcal >= 0 ? 'AÇIK' : 'FAZLA'}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+                  <CountUp to={Math.abs(burn.total - kcal)} style={[s.mid, { color: burn.total - kcal >= 0 ? C.accent : C.warn }]} />
+                  <Text style={s.midUnit}>kcal</Text>
+                </View>
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', height: 8, borderRadius: 4, overflow: 'hidden', marginTop: 14, gap: 2 }}>
+              {([[burn.rest + burn.digest, 'rgba(255,255,255,0.18)'], [burn.watch ?? burn.steps, '#9ad7ff'], [burn.training, C.accent]] as const).map(([v, col], i) => (
+                v > 0 ? <View key={i} style={{ flex: v, backgroundColor: col }} /> : null
+              ))}
+            </View>
+            <Text style={[s.idx, { marginTop: 10 }]}>
+              Dinlenme {Math.round(burn.rest + burn.digest)} · {burn.watch != null ? `Saat ${burn.watch}` : `${burn.measured ? 'Adım' : 'Günlük hareket'} ${burn.steps}`}{burn.training ? ` · Antrenman ${burn.training}` : ''}
+            </Text>
+            <Text style={[s.idx, { marginTop: 4, color: burn.measured ? C.dim : C.accent }]}>
+              {burn.measured ? 'Düzenlemek için dokun' : 'Adım ya da saatin Hareket kalorisini girmek için dokun'}
+            </Text>
+          </Pressable>
+        </Animated.View>
+      ) : null}
+
+      <Animated.View entering={enter(7)} style={{ flexDirection: 'row', gap: 12 }}>
         <Pressable onPress={() => router.navigate('/(tabs)/beslenme')} style={[s.card, { flex: 1 }]}>
           <Text style={s.kicker}>SU</Text>
           <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
