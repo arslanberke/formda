@@ -8,6 +8,7 @@ import { useEffect } from 'react'
 import { ActivityIndicator, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { useOtaUpdates } from '../lib/ota'
 import { hydrate, useHydrated } from '../lib/store'
 import { C } from '../lib/theme'
 
@@ -20,6 +21,7 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({ Geist_300Light, Geist_400Regular, Geist_500Medium, Geist_600SemiBold, Unbounded_500Medium, Unbounded_800ExtraBold })
   const ready = hydrated && (fontsLoaded || !!fontError)
   useEffect(() => { hydrate() }, [])
+  useOtaUpdates()
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: C.bg }}>
       <SafeAreaProvider>
