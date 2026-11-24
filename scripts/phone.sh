@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Formda'yı Mac'ten, USB ile bağlı iPhone'a gerçek uygulama olarak kurar
+# Formda'yı Mac'ten, USB ya da aynı Wi-Fi'deki iPhone'a gerçek uygulama olarak kurar
 # (SportPulse'taki `npm run release:phone` ile aynı yöntem; ücretsiz Apple ID).
 #
 # Kullanım:
@@ -19,8 +19,23 @@ if [[ -z "${DEVELOPER_DIR:-}" ]]; then
   done
 fi
 
+# Önce USB'ye bakar; yoksa aynı Wi-Fi'deki eşleşmiş iPhone'u (Xcode "Connect via network") bulur.
 attached_device() {
-  idevice_id -l 2>/dev/null | head -1 || true
+  local id
+  id=$(idevice_id -l 2>/dev/null | head -1 || true)
+  if [[ -z "$id" ]]; then
+    local tmp
+    tmp=$(mktemp)
+    xcrun devicectl list devices --json-output "$tmp" >/dev/null 2>&1 || true
+    id=$(node -e '
+      try {
+        const d = require(process.argv[1]).result.devices
+        const p = d.find((x) => x.hardwareProperties?.reality === "physical" && x.hardwareProperties?.platform === "iOS" && x.hardwareProperties?.udid)
+        if (p) process.stdout.write(p.hardwareProperties.udid)
+      } catch {}' "$tmp" 2>/dev/null || true)
+    rm -f "$tmp"
+  fi
+  printf '%s' "$id"
 }
 
 pull_latest() {
@@ -59,9 +74,14 @@ release)
   ;;
 renew)
   # Ücretsiz hesabın profili 7 günde dolar; expo run:ios profili kendisi yenileyemez.
+  udid=$(attached_device)
+  if [[ -z "$udid" ]]; then
+    echo "iPhone bulunamadı. Kabloyla tak ya da aynı Wi-Fi'de kilidini aç." >&2
+    exit 1
+  fi
   npx expo prebuild -p ios
   cd ios && xcodebuild -workspace Formda.xcworkspace -scheme Formda \
-    -configuration Release -destination "id=$(idevice_id -l | head -1)" \
+    -configuration Release -destination "id=$udid" \
     -allowProvisioningUpdates build
   echo "Telefonda: Ayarlar > Genel > VPN ve Cihaz Yönetimi > Geliştirici Uygulaması > Güven"
   ;;

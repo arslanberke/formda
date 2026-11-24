@@ -1,6 +1,6 @@
 # Formda'yı iPhone'a gerçek uygulama olarak kur
 
-SportPulse'la aynı yöntem: Mac + Xcode + ücretsiz Apple ID, kabloyla. İmza 7 günde bir dolar.
+SportPulse'la aynı yöntem: Mac + Xcode + ücretsiz Apple ID. Telefon kabloyla ya da (daha önce Xcode'da eşleştiyse) aynı Wi-Fi'den bulunur. İmza 7 günde bir dolar.
 
 ## İlk kurulum (bir kere)
 
@@ -9,7 +9,7 @@ SportPulse'la aynı yöntem: Mac + Xcode + ücretsiz Apple ID, kabloyla. İmza 7
    cd ~ && git clone https://github.com/arslanberke/formda.git && cd formda
    npm install
    ```
-2. iPhone'u kabloyla bağla, kilidini aç, "Bu bilgisayara güven" de.
+2. iPhone kabloyla bağlı ya da Mac ile aynı Wi-Fi'de olsun, kilidini aç.
 3. Kur:
    ```bash
    npm run release:phone
