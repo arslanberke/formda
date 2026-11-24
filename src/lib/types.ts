@@ -114,7 +114,7 @@ export interface AppState {
   foods: FoodEntry[]
   water: Record<string, number> // date -> ml
   body: BodyEntry[]
-  customFoods: { name: string; kcal: number; protein: number; carbs: number; fat: number; portion?: [number, string]; recipe?: { name: string; grams: number }[] }[]
+  customFoods: { name: string; kcal: number; protein: number; carbs: number; fat: number; portion?: [number, string]; recipe?: RecipeItem[] }[]
   activeWorkout: WorkoutLog | null
   cardio: CardioLog[]
   reminders?: { days: number[]; hour: number; minute: number } | null
@@ -123,3 +123,5 @@ export interface AppState {
 
 // Apple Watch "Hareket" halkası = aktif kalori (dinlenme hariç, adım + antrenman dahil)
 export interface DayActivity { steps?: number; activeKcal?: number; source?: 'manual' | 'health' }
+
+export interface RecipeItem { name: string; grams: number; kcal?: number; p?: number; c?: number; f?: number; unit?: string; label?: string; uG?: number; qty?: number }

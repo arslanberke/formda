@@ -134,6 +134,13 @@ export const FOODS: Food[] = [
   { name: 'Bira', kcal: 43, p: 0.5, c: 3.6, f: 0, portion: [500, '1 büyük'] },
   { name: 'Şalgam', kcal: 15, p: 0.5, c: 3, f: 0, portion: [300, '1 bardak'] },
   { name: 'Enerji içeceği', kcal: 45, p: 0, c: 11, f: 0, portion: [250, '1 kutu'] },
+  { name: 'Yumurta (çiğ, pişirmeden önce)', kcal: 143, p: 12.6, c: 0.7, f: 9.5, portion: [50, '1 adet'] },
+  { name: 'Chia tohumu', kcal: 486, p: 16.5, c: 42, f: 30.7, portion: [12, '1 yemek kaşığı'], density: 0.8 },
+  { name: 'Kakao (şekersiz)', kcal: 228, p: 19.6, c: 58, f: 13.7, portion: [5, '1 tatlı kaşığı'], density: 0.5 },
+  { name: 'Yaban mersini', kcal: 57, p: 0.7, c: 14.5, f: 0.3, portion: [70, '1 avuç'] },
+  { name: 'Marul', kcal: 17, p: 1.2, c: 3.3, f: 0.3, portion: [50, '3 yaprak'] },
+  { name: 'Yeşil biber', kcal: 20, p: 0.9, c: 4.6, f: 0.2, portion: [30, '1 adet'] },
+  { name: 'Mısır (konserve)', kcal: 80, p: 2.6, c: 17, f: 1.2, portion: [30, '2 yemek kaşığı'], density: 0.75 },
 ]
 
 // Yiyeceğin türüne göre pratik ölçüler (g). Kaynak: TÜBER 2015 porsiyonları (1 avuç fındık 30 g, 2 ince dilim ekmek 50 g),
@@ -158,6 +165,47 @@ export function unitsFor(f: Food): [string, number][] {
   const rule = UNIT_RULES.find(([re]) => re.test(n))
   return rule ? rule[1] : GENERIC_UNITS
 }
+
+// Smoothie, salata, tost gibi karışık yiyecekler: tek ürün yerine içindekilerden hesaplanır.
+// [yiyecek adı, ölçü ('g' | 'ml' | 'portion' | kaşık/dilim…), varsayılan miktar]
+export type MixItem = [string, string, number]
+export interface Mix { name: string; re: RegExp; items: MixItem[] }
+export const MIXES: Mix[] = [
+  { name: 'Smoothie', re: /smoothie|shake|milkshake|smuti/, items: [
+    ['Süt (yarım yağlı)', 'ml', 200], ['Muz', 'portion', 1], ['Yulaf ezmesi (kuru)', 'yemek kaşığı', 2], ['Fıstık ezmesi', 'portion', 1],
+    ['Protein tozu (whey)', 'portion', 1], ['Pınar Protein Süt (sade, laktozsuz)', 'ml', 200], ['Kefir', 'ml', 200], ['Yoğurt (tam yağlı)', 'g', 100],
+    ['Çilek', 'g', 100], ['Yaban mersini', 'portion', 1], ['Hurma', 'g', 25], ['Bal', 'tatlı kaşığı', 1], ['Kakao (şekersiz)', 'portion', 1],
+    ['Chia tohumu', 'portion', 1], ['Ceviz', 'g', 15], ['Avokado', 'g', 50] ] },
+  { name: 'Yulaf kasesi', re: /yulaf|overnight|granola|musli|porridge/, items: [
+    ['Yulaf ezmesi (kuru)', 'yemek kaşığı', 4], ['Süt (yarım yağlı)', 'ml', 150], ['Yoğurt (tam yağlı)', 'g', 100], ['Muz', 'portion', 1],
+    ['Bal', 'tatlı kaşığı', 1], ['Fıstık ezmesi', 'portion', 1], ['Ceviz', 'g', 15], ['Chia tohumu', 'portion', 1], ['Çilek', 'g', 100],
+    ['Protein tozu (whey)', 'portion', 1], ['Kakao (şekersiz)', 'portion', 1] ] },
+  { name: 'Salata', re: /salata/, items: [
+    ['Domates', 'portion', 1], ['Salatalık', 'portion', 1], ['Marul', 'portion', 1], ['Yeşil biber', 'portion', 1], ['Zeytinyağı', 'portion', 1],
+    ['Beyaz peynir (tam yağlı)', 'portion', 1], ['Ton balığı (konserve, suda)', 'portion', 1], ['Tavuk göğsü (ızgara)', 'g', 100],
+    ['Mısır (konserve)', 'portion', 1], ['Zeytin', 'tane', 5], ['Avokado', 'g', 50], ['Yumurta (haşlanmış)', 'portion', 1], ['Lor peyniri', 'g', 50] ] },
+  { name: 'Tost / sandviç', re: /tost|sandvic|sandwich/, items: [
+    ['Beyaz ekmek', 'dilim', 2], ['Tam buğday ekmeği', 'dilim', 2], ['Kaşar peyniri', 'portion', 2], ['Beyaz peynir (tam yağlı)', 'portion', 1],
+    ['Sucuk', 'g', 30], ['Hindi füme', 'g', 30], ['Domates', 'g', 40], ['Tereyağı', 'portion', 1], ['Lavaş', 'portion', 1] ] },
+  { name: 'Omlet / menemen', re: /omlet|menemen|sahanda|cilbir/, items: [
+    ['Yumurta (çiğ, pişirmeden önce)', 'portion', 2], ['Tereyağı', 'portion', 1], ['Zeytinyağı', 'portion', 1], ['Domates', 'portion', 1],
+    ['Yeşil biber', 'portion', 1], ['Kaşar peyniri', 'portion', 1], ['Beyaz peynir (tam yağlı)', 'portion', 1], ['Sucuk', 'g', 30] ] },
+]
+
+export const mixFor = (q: string) => { const n = normalizeTr(q.trim()); return n.length < 3 ? undefined : MIXES.find((m) => m.re.test(n)) }
+export const foodByName = (name: string) => FOODS.find((f) => f.name === name)
+
+// Bir ölçünün (g, ml, porsiyon, kaşık, dilim…) bu yiyecekte kaç grama denk geldiği
+export function unitGramsOf(f: Food, u: string): number {
+  if (u === 'g') return 1
+  if (u === 'ml') return f.density ?? 1
+  const portionLabel = f.portion?.[1].replace(/^1 /, '')
+  if (u === 'portion' || u === portionLabel) return f.portion?.[0] ?? 100
+  const ex = unitsFor(f).find(([l]) => l === u)
+  if (ex) return ex[1]
+  return (MEASURES.find((m) => m[0] === u)?.[1] ?? 1) * (f.density ?? 1)
+}
+export const unitLabelOf = (f: Food, u: string) => (u === 'portion' ? (f.portion?.[1].replace(/^1 /, '') ?? 'porsiyon') : u)
 
 export function normalizeTr(s: string) {
   return s.toLocaleLowerCase('tr').replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ç/g, 'c')

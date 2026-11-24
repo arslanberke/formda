@@ -8,6 +8,7 @@ import { useEffect } from 'react'
 import { ActivityIndicator, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { KeyboardDoneBar } from '../components/ui'
 import { useOtaUpdates } from '../lib/ota'
 import { hydrate, useHydrated } from '../lib/store'
 import { C } from '../lib/theme'
@@ -26,6 +27,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: C.bg }}>
       <SafeAreaProvider>
         <StatusBar style="light" />
+        <KeyboardDoneBar />
         {!ready ? (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.bg }}><ActivityIndicator color={C.accent} /></View>
         ) : (

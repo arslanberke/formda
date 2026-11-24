@@ -2,7 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, FlatList, Pressable, Text, View } from 'react-native'
 import { Button, Card, Chip, H1, H2, Input, Muted, NumberInput, Row, Screen, Wrap, TopBar } from '../components/ui'
-import { MEASURES, searchFoods, searchOpenFoodFacts, unitsFor, type Food } from '../data/foods'
+import { foodByName, MEASURES, MIXES, mixFor, searchFoods, searchOpenFoodFacts, unitGramsOf, unitLabelOf, unitsFor, type Food } from '../data/foods'
 import Scanner from '../components/Scanner'
 import { ocrAvailable, scanAvailable } from '../lib/scan'
 import { setState, todayStr, uid, useStore } from '../lib/store'
@@ -57,13 +57,7 @@ export default function FoodAdd() {
   const portionMeasure = sel?.portion ? sel.portion[1].replace(/^1 /, '') : undefined
   const portionIsMeasure = MEASURES.some((m) => m[0] === portionMeasure)
   const extraUnits = sel ? unitsFor(sel).filter(([l]) => l !== portionMeasure) : []
-  const unitGrams = (u: string) => {
-    if (u === 'portion' || (portionIsMeasure && u === portionMeasure)) return sel?.portion?.[0] ?? 100
-    const ex = extraUnits.find(([l]) => l === u)
-    if (ex) return ex[1]
-    if (u === 'ml') return sel?.density ?? 1
-    return (MEASURES.find((m) => m[0] === u)?.[1] ?? 1) * (sel?.density ?? 1)
-  }
+  const unitGrams = (u: string) => (sel ? unitGramsOf(sel, u) : 1)
   const chooseUnit = (u: string) => {
     setUnit(u)
     if (u === 'g') return
@@ -73,22 +67,37 @@ export default function FoodAdd() {
   const setCount = (n: number | undefined) => { setQty(n); setGrams(n ? Math.round(n * unitGrams(unit) * 10) / 10 : undefined) }
 
   const [scan, setScan] = useState<'barcode' | 'label' | null>(null)
-  type Item = { name: string; grams: number; kcal: number; p: number; c: number; f: number }
-  const [recipe, setRecipe] = useState<{ name: string; items: Item[] } | null>(null)
+  type Item = { name: string; per: { kcal: number; p: number; c: number; f: number }; unit: string; label: string; uG: number; qty: number }
+  const [recipe, setRecipe] = useState<{ name: string; items: Item[]; mix?: string } | null>(null)
   const [recipeSearch, setRecipeSearch] = useState(false)
   const r1 = (x: number) => Math.round(x * 10) / 10
+  const itemG = (x: Item) => x.qty * x.uG
+  const itemOf = (f: Food, u: string, n: number): Item => ({ name: f.name, per: { kcal: f.kcal, p: f.p, c: f.c, f: f.f }, unit: u, label: u === 'g' ? 'g' : unitLabelOf(f, u), uG: u === 'g' ? 1 : unitGramsOf(f, u), qty: n })
+  const addItem = (it: Item) => recipe && setRecipe({ ...recipe, items: [...recipe.items, it] })
+  const setItemQty = (i: number, n: number | undefined) => recipe && setRecipe({ ...recipe, items: recipe.items.map((x, j) => (j === i ? { ...x, qty: n ?? 0 } : x)) })
   const addToRecipe = () => {
     if (!sel || !grams || !recipe) return
-    const k = grams / 100
-    setRecipe({ ...recipe, items: [...recipe.items, { name: sel.name, grams, kcal: sel.kcal * k, p: sel.p * k, c: sel.c * k, f: sel.f * k }] })
+    addItem(unit === 'g' ? itemOf(sel, 'g', grams) : { ...itemOf(sel, unit, qty || 1), uG: grams / (qty || 1) })
     setSel(null); setRecipeSearch(false); setQ(''); setOff(null)
   }
+  const startMix = (name: string) => { setRecipe({ name, items: [], mix: MIXES.find((m) => m.name === name)?.name }); setQ(''); setOff(null) }
+  const editRecipe = (name: string) => {
+    const saved = customFoods.find((x) => x.name === name)
+    const items: Item[] = (saved?.recipe ?? []).flatMap((x) => {
+      const base = x.kcal !== undefined ? { name: x.name, kcal: x.kcal, p: x.p ?? 0, c: x.c ?? 0, f: x.f ?? 0 } : foodByName(x.name)
+      if (!base) return []
+      return [{ name: x.name, per: { kcal: base.kcal, p: base.p, c: base.c, f: base.f }, unit: x.unit ?? 'g', label: x.label ?? 'g', uG: x.uG ?? 1, qty: x.qty ?? x.grams }]
+    })
+    setRecipe({ name, items, mix: mixFor(name)?.name }); setSel(null)
+  }
   const saveRecipe = () => {
-    if (!recipe || !recipe.items.length) return
-    const name = recipe.name.trim() || 'Smoothie'
-    const g = recipe.items.reduce((a, x) => a + x.grams, 0)
-    const sum = (k: 'kcal' | 'p' | 'c' | 'f') => recipe.items.reduce((a, x) => a + x[k], 0) * 100 / g
-    const food = { name, kcal: r1(sum('kcal')), protein: r1(sum('p')), carbs: r1(sum('c')), fat: r1(sum('f')), portion: [g, 'tamamı'] as [number, string], recipe: recipe.items.map((x) => ({ name: x.name, grams: x.grams })) }
+    const items = recipe?.items.filter((x) => itemG(x) > 0) ?? []
+    if (!recipe || !items.length) return
+    const name = recipe.name.trim() || recipe.mix || 'Karışım'
+    const g = items.reduce((a, x) => a + itemG(x), 0)
+    const sum = (k: 'kcal' | 'p' | 'c' | 'f') => items.reduce((a, x) => a + x.per[k] * itemG(x) / 100, 0) * 100 / g
+    const food = { name, kcal: r1(sum('kcal')), protein: r1(sum('p')), carbs: r1(sum('c')), fat: r1(sum('f')), portion: [Math.round(g), 'tamamı'] as [number, string],
+      recipe: items.map((x) => ({ name: x.name, grams: itemG(x), kcal: x.per.kcal, p: x.per.p, c: x.per.c, f: x.per.f, unit: x.unit, label: x.label, uG: x.uG, qty: x.qty })) }
     setState((s) => ({ customFoods: [...s.customFoods.filter((x) => x.name !== name), food] }))
     setRecipe(null)
     pick({ name, kcal: food.kcal, p: food.protein, c: food.carbs, f: food.fat, portion: food.portion, tags: 'recipe' })
@@ -126,18 +135,23 @@ export default function FoodAdd() {
     return (
       <Screen padBottom={40}>
         <H1>{sel.name}</H1>
-        <Muted style={{ marginBottom: 12 }}>100 g: {sel.kcal} kcal · P {sel.p} · K {sel.c} · Y {sel.f}</Muted>
+        <Muted style={{ marginBottom: 12 }}>{recipe ? `${recipe.name || recipe.mix || 'Karışım'} içine · ` : ''}100 g: {sel.kcal} kcal · P {sel.p} · K {sel.c} · Y {sel.f}</Muted>
+        {sel.tags === 'recipe' && !recipe && <Button kind="ghost" small title="İçindekileri düzenle" style={{ alignSelf: 'flex-start', marginBottom: 10 }} onPress={() => editRecipe(sel.name)} />}
         <Card>
-          <Muted style={{ marginBottom: 6 }}>Öğün</Muted>
-          <Wrap>{MEALS.map((m) => <Chip key={m.id} label={m.name} on={meal === m.id} onPress={() => setMeal(m.id)} />)}</Wrap>
-          <View style={{ height: 12 }} />
+          {!recipe && (
+            <>
+              <Muted style={{ marginBottom: 6 }}>Öğün</Muted>
+              <Wrap>{MEALS.map((m) => <Chip key={m.id} label={m.name} on={meal === m.id} onPress={() => setMeal(m.id)} />)}</Wrap>
+              <View style={{ height: 12 }} />
+            </>
+          )}
           <Muted style={{ marginBottom: 6 }}>Ölçü</Muted>
           <Wrap>
             <Chip label="Gram" on={unit === 'g'} onPress={() => chooseUnit('g')} />
             <Chip label="ml" on={unit === 'ml'} onPress={() => chooseUnit('ml')} />
             {sel.portion && !portionIsMeasure && <Chip label={sel.portion[1].replace(/^1 /, '')} on={unit === 'portion'} onPress={() => chooseUnit('portion')} />}
             {extraUnits.map(([l, g]) => <Chip key={l} label={`${l} ~${g} g`} on={unit === l} onPress={() => chooseUnit(l)} />)}
-            {MEASURES.map(([m]) => <Chip key={m} label={m} on={unit === m} onPress={() => chooseUnit(m)} />)}
+            {sel.tags !== 'recipe' && MEASURES.map(([m]) => <Chip key={m} label={m} on={unit === m} onPress={() => chooseUnit(m)} />)}
           </Wrap>
           <View style={{ height: 12 }} />
           {unit === 'g' ? (
@@ -196,34 +210,58 @@ export default function FoodAdd() {
   }
 
   if (recipe && !recipeSearch) {
-    const tot = (k: 'kcal' | 'p' | 'c' | 'f') => Math.round(recipe.items.reduce((a, x) => a + x[k], 0))
+    const tot = (k: 'kcal' | 'p' | 'c' | 'f') => Math.round(recipe.items.reduce((a, x) => a + x.per[k] * itemG(x) / 100, 0))
+    const mix = MIXES.find((m) => m.name === recipe.mix)
+    const have = new Set(recipe.items.map((x) => x.name))
+    const short = (n: string) => n.replace(/ \(.*\)$/, '')
+    const stepOf = (x: Item) => (x.unit === 'g' ? 10 : x.unit === 'ml' ? 50 : x.uG < 10 ? 1 : 0.5)
     return (
       <Screen padBottom={40}>
         <TopBar left={{ label: 'Vazgeç', onPress: () => setRecipe(null) }} />
-        <H1>Karışım / tarif</H1>
-        <Muted style={{ marginBottom: 12 }}>İçine ne koyduysan tek tek ekle; toplam kaloriyi ben hesaplarım. Bir kere kaydedince sonra tek dokunuşla eklersin.</Muted>
+        <H1>{recipe.mix ?? 'Karışım / tarif'}</H1>
+        <Muted style={{ marginBottom: 12 }}>İçine ne koyduysan dokun, miktarını düzelt. Kaloriyi ben toplarım; kaydedince sonra tek dokunuşla eklersin.</Muted>
+        {!mix && (
+          <Card>
+            <Muted style={{ marginBottom: 6 }}>Ne hazırlıyorsun?</Muted>
+            <Wrap>{MIXES.map((m) => <Chip key={m.name} label={m.name} on={false} onPress={() => setRecipe({ ...recipe, mix: m.name, name: recipe.name || m.name })} />)}</Wrap>
+          </Card>
+        )}
+        {mix && (
+          <Card>
+            <Muted style={{ marginBottom: 6 }}>İçinde ne var? Dokun, eklensin</Muted>
+            <Wrap>
+              {mix.items.filter(([n]) => !have.has(n)).map(([n, u, k]) => {
+                const f = foodByName(n)
+                if (!f) return null
+                return <Chip key={n} label={`+ ${short(n)} · ${k} ${unitLabelOf(f, u)}`} on={false} onPress={() => addItem(itemOf(f, u, k))} />
+              })}
+            </Wrap>
+          </Card>
+        )}
         <Card>
-          <Input label="Adı" value={recipe.name} onChangeText={(t) => setRecipe({ ...recipe, name: t })} placeholder="Örn. Kahvaltı smoothie" />
+          <Input label="Adı" value={recipe.name} onChangeText={(t) => setRecipe({ ...recipe, name: t })} placeholder={`Örn. ${recipe.mix ?? 'Kahvaltı smoothie'}`} />
+          {recipe.items.length === 0 && <Muted>Henüz malzeme yok.</Muted>}
           {recipe.items.map((x, i) => (
-            <Row key={i} style={{ justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: C.border }}>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: C.text, fontFamily: F.medium }} numberOfLines={1}>{x.name}</Text>
-                <Muted>{Math.round(x.grams)} g · {Math.round(x.kcal)} kcal</Muted>
-              </View>
-              <Pressable hitSlop={10} onPress={() => setRecipe({ ...recipe, items: recipe.items.filter((_, j) => j !== i) })}>
-                <Text style={{ color: C.muted, fontFamily: F.semi }}>Sil</Text>
-              </Pressable>
-            </Row>
+            <View key={i} style={{ paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.border }}>
+              <Row style={{ justifyContent: 'space-between', marginBottom: 6 }}>
+                <Text style={{ color: C.text, fontFamily: F.medium, flex: 1 }} numberOfLines={1}>{x.name}</Text>
+                <Muted>{x.unit !== 'g' ? `${Math.round(itemG(x))} g · ` : ''}{Math.round(x.per.kcal * itemG(x) / 100)} kcal</Muted>
+                <Pressable hitSlop={10} onPress={() => setRecipe({ ...recipe, items: recipe.items.filter((_, j) => j !== i) })}>
+                  <Text style={{ color: C.muted, fontFamily: F.semi, marginLeft: 12 }}>Sil</Text>
+                </Pressable>
+              </Row>
+              <NumberInput bare value={x.qty} onChange={(n) => setItemQty(i, n)} step={stepOf(x)} suffix={x.label} />
+            </View>
           ))}
-          <Button kind="secondary" small title="+ Malzeme ekle" style={{ marginTop: 12 }} onPress={() => { setQ(''); setOff(null); setRecipeSearch(true) }} />
+          <Button kind="secondary" small title={mix ? '+ Başka malzeme ara' : '+ Malzeme ekle'} style={{ marginTop: 12 }} onPress={() => { setQ(''); setOff(null); setRecipeSearch(true) }} />
         </Card>
         {recipe.items.length > 0 && (
           <Card>
             <Text style={{ color: C.text, fontSize: 32, fontFamily: F.semi }}>{tot('kcal')} <Text style={{ fontSize: 16, color: C.muted }}>kcal toplam</Text></Text>
-            <Muted>Protein {tot('p')} g · Karb {tot('c')} g · Yağ {tot('f')} g</Muted>
+            <Muted>Protein {tot('p')} g · Karb {tot('c')} g · Yağ {tot('f')} g · ~{Math.round(recipe.items.reduce((a, x) => a + itemG(x), 0))} g</Muted>
           </Card>
         )}
-        <Button title="Kaydet ve öğüne ekle" disabled={!recipe.items.length} onPress={saveRecipe} />
+        <Button title="Kaydet, ne kadarını yediğini seç" disabled={!recipe.items.length} onPress={saveRecipe} />
       </Screen>
     )
   }
@@ -260,6 +298,12 @@ export default function FoodAdd() {
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
             renderItem={({ item }) => <FoodRow f={item} onPress={() => pick(item)} />}
+            ListHeaderComponent={!recipeSearch && mixFor(q) ? (
+              <Card onPress={() => startMix(mixFor(q)!.name)} style={{ marginTop: 6, borderColor: C.accent, borderWidth: 1 }}>
+                <Text style={{ color: C.accent, fontFamily: F.semi, fontSize: 16 }}>{mixFor(q)!.name}: içindekilerden hesapla</Text>
+                <Muted>{mixFor(q)!.items.slice(0, 4).map(([n]) => n.replace(/ \(.*\)$/, '').toLocaleLowerCase('tr')).join(', ')}… dokun, miktarını gir</Muted>
+              </Card>
+            ) : undefined}
             ListFooterComponent={
               <View style={{ paddingBottom: 40 }}>
                 <View style={{ height: 28, justifyContent: 'center', marginTop: 8 }}>

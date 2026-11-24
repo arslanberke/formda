@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons'
 import React from 'react'
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type StyleProp, type TextInputProps, type ViewStyle } from 'react-native'
+import { ActivityIndicator, InputAccessoryView, Keyboard, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type StyleProp, type TextInputProps, type ViewStyle } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { C, F, R } from '../lib/theme'
 
@@ -8,7 +8,7 @@ export function Screen({ children, scroll = true, style, padBottom = 110 }: { ch
   const insets = useSafeAreaInsets()
   if (!scroll) return <View style={[styles.screen, { paddingTop: insets.top + 8 }, style]}>{children}</View>
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={[{ padding: 20, paddingTop: insets.top + 12, paddingBottom: padBottom + 16 }, style]} keyboardShouldPersistTaps="handled">
+    <ScrollView style={styles.screen} contentContainerStyle={[{ padding: 20, paddingTop: insets.top + 12, paddingBottom: padBottom + 16 }, style]} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets keyboardDismissMode="interactive">
       {children}
     </ScrollView>
   )
@@ -78,11 +78,27 @@ export function NumberInput({ label, value, onChange, suffix, placeholder, step,
       {label ? <Text style={styles.label}>{label}</Text> : null}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         {step ? <Pressable onPress={() => { const v = (value ?? 0) - step; const nv = Math.max(0, Math.round(v * 100) / 100); onChange(nv); setText(String(nv)) }} style={styles.stepBtn}><Text style={styles.stepTxt}>−</Text></Pressable> : null}
-        <TextInput keyboardType="decimal-pad" placeholder={placeholder} placeholderTextColor={C.dim} value={text} onChangeText={(t) => { setText(t); const n = parseFloat(t.replace(',', '.')); onChange(isNaN(n) ? undefined : n) }} style={[styles.input, { flex: 1, minWidth: 0, width: 0, textAlign: step ? 'center' : 'left' }]} />
+        <TextInput keyboardType="decimal-pad" inputAccessoryViewID={Platform.OS === 'ios' ? DONE_BAR : undefined} placeholder={placeholder} placeholderTextColor={C.dim} value={text} onChangeText={(t) => { setText(t); const n = parseFloat(t.replace(',', '.')); onChange(isNaN(n) ? undefined : n) }} style={[styles.input, { flex: 1, minWidth: 0, width: 0, textAlign: step ? 'center' : 'left' }]} />
         {step ? <Pressable onPress={() => { const nv = Math.round(((value ?? 0) + step) * 100) / 100; onChange(nv); setText(String(nv)) }} style={styles.stepBtn}><Text style={styles.stepTxt}>+</Text></Pressable> : null}
         {suffix ? <Text style={{ color: C.muted, minWidth: 36, fontFamily: F.body, fontSize: 13 }}>{suffix}</Text> : null}
       </View>
     </View>
+  )
+}
+
+const DONE_BAR = 'formda-done'
+
+// Sayı klavyesinde iOS'ta "bitti" tuşu yok; klavyenin üstüne kapatma çubuğu.
+export function KeyboardDoneBar() {
+  if (Platform.OS !== 'ios') return null
+  return (
+    <InputAccessoryView nativeID={DONE_BAR} backgroundColor={C.card2}>
+      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 16, paddingVertical: 8, borderTopWidth: 1, borderTopColor: C.border }}>
+        <Pressable onPress={() => Keyboard.dismiss()} hitSlop={10}>
+          <Text style={{ color: C.accent, fontFamily: F.semi, fontSize: 16 }}>Bitti</Text>
+        </Pressable>
+      </View>
+    </InputAccessoryView>
   )
 }
 
