@@ -37,9 +37,8 @@ export function Muted({ children, style }: { children: React.ReactNode; style?: 
 export function Button({ title, onPress, kind = 'primary', disabled, style, small, loading }: { title: string; onPress?: () => void; kind?: 'primary' | 'secondary' | 'ghost' | 'danger'; disabled?: boolean; style?: StyleProp<ViewStyle>; small?: boolean; loading?: boolean }) {
   const bg = kind === 'primary' ? C.accent : kind === 'secondary' ? C.card2 : kind === 'danger' ? C.danger : 'transparent'
   const color = kind === 'primary' ? C.onAccent : kind === 'danger' ? C.onAccent : C.text
-  const glow = disabled ? null : kind === 'primary' ? styles.glowPrimary : kind === 'secondary' ? styles.glowSecondary : null
   return (
-    <Pressable onPress={onPress} disabled={disabled || loading} style={({ pressed }) => [styles.btn, { backgroundColor: bg, borderWidth: kind === 'ghost' || kind === 'secondary' ? 1 : 0, borderColor: kind === 'secondary' ? 'rgba(255,255,255,0.14)' : C.border }, glow, small && { paddingVertical: 8, paddingHorizontal: 12 }, (disabled || loading) && { opacity: 0.4 }, pressed && { transform: [{ scale: 0.98 }] }, style]}>
+    <Pressable onPress={onPress} disabled={disabled || loading} style={({ pressed }) => [styles.btn, { backgroundColor: bg, borderWidth: kind === 'ghost' ? 1 : 0, borderColor: C.border }, small && { paddingVertical: 8, paddingHorizontal: 12 }, (disabled || loading) && { opacity: 0.4 }, pressed && { transform: [{ scale: 0.98 }] }, style]}>
       {loading ? <ActivityIndicator color={color} /> : <Text style={[styles.btnText, { color }, small && { fontSize: 14 }]}>{title}</Text>}
     </Pressable>
   )
@@ -157,8 +156,6 @@ export const styles = StyleSheet.create({
   h2: { color: C.text, fontSize: 17, fontFamily: F.display, letterSpacing: -0.6, marginBottom: 8 },
   p: { color: C.text, fontSize: 16, lineHeight: 23, fontFamily: F.body },
   muted: { color: C.muted, fontSize: 13, fontFamily: F.light },
-  glowPrimary: { boxShadow: '0 10px 30px -8px rgba(217,255,61,0.45)' },
-  glowSecondary: { boxShadow: '0 8px 28px -6px rgba(255,255,255,0.32), inset 0 1px 0 rgba(255,255,255,0.10)' },
   btn: { paddingVertical: 16, paddingHorizontal: 20, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
   btnText: { fontSize: 15, fontFamily: F.semi },
   chip: { paddingVertical: 9, paddingHorizontal: 15, borderRadius: 999, borderWidth: 1, borderColor: C.border, backgroundColor: C.card },
