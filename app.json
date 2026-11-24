@@ -45,6 +45,15 @@
           "NSHealthUpdateUsageDescription": false,
           "background": false
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Formda, yiyeceğin barkodunu okumak ve paketteki besin tablosunu fotoğraflamak için kamerayı kullanır.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": true
+        }
       ]
     ],
     "experiments": {

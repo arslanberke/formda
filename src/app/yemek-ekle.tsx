@@ -2,7 +2,9 @@ import { router, useLocalSearchParams } from 'expo-router'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, FlatList, Pressable, Text, View } from 'react-native'
 import { Button, Card, Chip, H1, H2, Input, Muted, NumberInput, Row, Screen, Wrap, TopBar } from '../components/ui'
-import { MEASURES, searchFoods, searchOpenFoodFacts, type Food } from '../data/foods'
+import { MEASURES, searchFoods, searchOpenFoodFacts, unitsFor, type Food } from '../data/foods'
+import Scanner from '../components/Scanner'
+import { ocrAvailable, scanAvailable } from '../lib/scan'
 import { setState, todayStr, uid, useStore } from '../lib/store'
 import { C, F } from '../lib/theme'
 import type { Meal } from '../lib/types'
@@ -54,8 +56,11 @@ export default function FoodAdd() {
   // porsiyon "1 yemek kaşığı" gibi bir ölçüyse o yiyeceğe özel gramı kullan, aynı ölçüyü iki kez gösterme
   const portionMeasure = sel?.portion ? sel.portion[1].replace(/^1 /, '') : undefined
   const portionIsMeasure = MEASURES.some((m) => m[0] === portionMeasure)
+  const extraUnits = sel ? unitsFor(sel).filter(([l]) => l !== portionMeasure) : []
   const unitGrams = (u: string) => {
     if (u === 'portion' || (portionIsMeasure && u === portionMeasure)) return sel?.portion?.[0] ?? 100
+    const ex = extraUnits.find(([l]) => l === u)
+    if (ex) return ex[1]
     if (u === 'ml') return sel?.density ?? 1
     return (MEASURES.find((m) => m[0] === u)?.[1] ?? 1) * (sel?.density ?? 1)
   }
@@ -67,6 +72,7 @@ export default function FoodAdd() {
   }
   const setCount = (n: number | undefined) => { setQty(n); setGrams(n ? Math.round(n * unitGrams(unit) * 10) / 10 : undefined) }
 
+  const [scan, setScan] = useState<'barcode' | 'label' | null>(null)
   type Item = { name: string; grams: number; kcal: number; p: number; c: number; f: number }
   const [recipe, setRecipe] = useState<{ name: string; items: Item[] } | null>(null)
   const [recipeSearch, setRecipeSearch] = useState(false)
@@ -103,6 +109,18 @@ export default function FoodAdd() {
     pick({ name: food.name, kcal: food.kcal, p: food.protein, c: food.carbs, f: food.fat })
   }
 
+  if (scan) {
+    return (
+      <Scanner
+        mode={scan}
+        onClose={() => setScan(null)}
+        onProduct={(x) => { setScan(null); pick({ name: x.brand ? `${x.name} (${x.brand})` : x.name, kcal: x.kcal, p: x.p, c: x.c, f: x.f, portion: x.serving ? [x.serving, '1 porsiyon'] : undefined }) }}
+        onLabel={(v) => { setScan(null); setCf({ name: q, kcal: v.kcal, p: v.p, c: v.c, f: v.f }); setCustom(true) }}
+        onWantLabel={() => setScan('label')}
+      />
+    )
+  }
+
   if (sel) {
     const k = (grams ?? 0) / 100
     return (
@@ -118,6 +136,7 @@ export default function FoodAdd() {
             <Chip label="Gram" on={unit === 'g'} onPress={() => chooseUnit('g')} />
             <Chip label="ml" on={unit === 'ml'} onPress={() => chooseUnit('ml')} />
             {sel.portion && !portionIsMeasure && <Chip label={sel.portion[1].replace(/^1 /, '')} on={unit === 'portion'} onPress={() => chooseUnit('portion')} />}
+            {extraUnits.map(([l, g]) => <Chip key={l} label={`${l} ~${g} g`} on={unit === l} onPress={() => chooseUnit(l)} />)}
             {MEASURES.map(([m]) => <Chip key={m} label={m} on={unit === m} onPress={() => chooseUnit(m)} />)}
           </Wrap>
           <View style={{ height: 12 }} />
@@ -139,7 +158,7 @@ export default function FoodAdd() {
               ) : (
                 <NumberInput label="Kaç tane" value={qty} onChange={setCount} step={0.5} />
               )}
-              <Muted>≈ {grams ?? 0} g{unit !== 'portion' && !sel.density ? ' (sıvı gibi hesaplandı; tartabiliyorsan gramla gir)' : ''}</Muted>
+              <Muted>≈ {grams ?? 0} g{MEASURES.some((m) => m[0] === unit) && !sel.density ? ' (sıvı gibi hesaplandı; tartabiliyorsan gramla gir)' : ''}</Muted>
             </>
           )}
         </Card>
@@ -159,7 +178,8 @@ export default function FoodAdd() {
     return (
       <Screen padBottom={40}>
         <H1>Kendi yiyeceğini ekle</H1>
-        <Muted style={{ marginBottom: 12 }}>Paketin arkasındaki 100 g değerlerini yaz.</Muted>
+        <Muted style={{ marginBottom: 12 }}>Paketin arkasındaki 100 g değerlerini yaz{cf.kcal !== undefined ? '. Fotoğraftan okudum, paketle bir karşılaştır' : ''}.</Muted>
+        {ocrAvailable() && <Button kind="secondary" small title="Etiketi fotoğrafla, ben doldurayım" style={{ marginBottom: 12 }} onPress={() => setScan('label')} />}
         <Card>
           <Input label="Adı" value={cf.name} onChangeText={(t) => setCf({ ...cf, name: t })} placeholder="Örn. Eti Form" />
           <NumberInput label="Kalori (100 g)" value={cf.kcal} onChange={(v) => setCf({ ...cf, kcal: v })} suffix="kcal" />
@@ -219,6 +239,12 @@ export default function FoodAdd() {
       <View style={{ flex: 1 }}>
         {q.trim() === '' ? (
           <View>
+            {scanAvailable() && (
+              <Row style={{ marginTop: 8 }}>
+                <Button kind="secondary" small title="Barkod okut" style={{ flex: 1 }} onPress={() => setScan('barcode')} />
+                {ocrAvailable() && <Button kind="secondary" small title="Etiketi fotoğrafla" style={{ flex: 1 }} onPress={() => setScan('label')} />}
+              </Row>
+            )}
             {!recipeSearch && recipes.length > 0 && <H2 style={{ marginTop: 8 }}>Tariflerin</H2>}
             {!recipeSearch && recipes.map((f) => <FoodRow key={f.name} f={f} onPress={() => pick(f)} />)}
             {recentUnique.length > 0 && <H2 style={{ marginTop: 8 }}>Son eklediklerin</H2>}

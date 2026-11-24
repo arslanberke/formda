@@ -101,6 +101,10 @@ export const FOODS: Food[] = [
   { name: 'Badem', kcal: 579, p: 21, c: 22, f: 50, portion: [30, '1 avuç'] },
   { name: 'Ceviz', kcal: 654, p: 15, c: 14, f: 65, portion: [30, '1 avuç'] },
   { name: 'Fındık', kcal: 628, p: 15, c: 17, f: 61, portion: [30, '1 avuç'] },
+  { name: 'Yer fıstığı (kavrulmuş)', kcal: 585, p: 24, c: 21, f: 50, portion: [30, '1 avuç'] },
+  { name: 'Kaju', kcal: 553, p: 18, c: 30, f: 44, portion: [30, '1 avuç'] },
+  { name: 'Leblebi', kcal: 370, p: 20, c: 58, f: 6, portion: [30, '1 avuç'] },
+  { name: 'Ay çekirdeği (iç)', kcal: 584, p: 21, c: 20, f: 51, portion: [30, '1 avuç'] },
   { name: 'Fıstık ezmesi', kcal: 588, p: 25, c: 20, f: 50, portion: [20, '1 yemek kaşığı'], density: 1.07 },
   { name: 'Zeytin', kcal: 115, p: 0.8, c: 6, f: 11, portion: [20, '5 adet'] },
   { name: 'Zeytinyağı', kcal: 884, p: 0, c: 0, f: 100, portion: [10, '1 yemek kaşığı'], density: 0.92 },
@@ -111,6 +115,7 @@ export const FOODS: Food[] = [
   { name: 'Baklava', kcal: 430, p: 7, c: 50, f: 23, portion: [40, '1 dilim'] },
   { name: 'Sütlaç', kcal: 130, p: 3.5, c: 22, f: 3, portion: [200, '1 kase'] },
   { name: 'Çikolata (sütlü)', kcal: 535, p: 7.6, c: 59, f: 30, portion: [30, '1 küçük paket'] },
+  { name: 'Bitter çikolata (%70+)', kcal: 598, p: 7.8, c: 46, f: 43, portion: [6, '1 kare'] },
   { name: 'Bisküvi', kcal: 480, p: 6, c: 68, f: 20, portion: [10, '1 adet'] },
   { name: 'Cips', kcal: 536, p: 7, c: 53, f: 34, portion: [40, '1 küçük paket'] },
   { name: 'Dondurma', kcal: 207, p: 3.5, c: 24, f: 11, portion: [100, '2 top'] },
@@ -131,6 +136,29 @@ export const FOODS: Food[] = [
   { name: 'Enerji içeceği', kcal: 45, p: 0, c: 11, f: 0, portion: [250, '1 kutu'] },
 ]
 
+// Yiyeceğin türüne göre pratik ölçüler (g). Kaynak: TÜBER 2015 porsiyonları (1 avuç fındık 30 g, 2 ince dilim ekmek 50 g),
+// Hacettepe Yemek ve Besin Fotoğraf Kataloğu; 100 g tablet çikolata genelde 16-24 kare.
+const UNIT_RULES: [RegExp, [string, number][]][] = [
+  [/ezmesi|tahin|pekmez|recel|\bbal\b|yagi?\b|tozu/, []],
+  [/cikolata|gofret/, [['kare', 6], ['sıra (4 kare)', 24], ['tablet (80 g)', 80]]],
+  [/findik|badem|ceviz|fistik|kaju|leblebi|cekirdek|cerez|kuruyemis|kuru uzum|antep/, [['avuç', 30], ['tane', 1.2]]],
+  [/ekmek|lavas|tost/, [['ince dilim', 20], ['dilim', 25], ['kalın dilim', 35]]],
+  [/peynir|kasar/, [['dilim', 30], ['kibrit kutusu kadar', 30]]],
+  [/biskuvi|kraker/, [['adet', 8], ['paket (küçük)', 40]]],
+  [/cips|patlamis/, [['avuç', 15], ['küçük paket', 40]]],
+  [/zeytin\b|zeytin$/, [['tane', 4]]],
+  [/yumurta/, [['adet', 50]]],
+  [/pilav|makarna|bulgur|kuskus|eriste/, [['servis kaşığı', 30], ['kase', 180]]],
+  [/yogurt|corba|sut|ayran|kefir|smoothie/, [['kase', 200], ['bardak', 200]]],
+]
+export const GENERIC_UNITS: [string, number][] = [['avuç', 30], ['kase', 200]]
+
+export function unitsFor(f: Food): [string, number][] {
+  const n = normalizeTr(`${f.name} ${f.tags ?? ''}`)
+  const rule = UNIT_RULES.find(([re]) => re.test(n))
+  return rule ? rule[1] : GENERIC_UNITS
+}
+
 export function normalizeTr(s: string) {
   return s.toLocaleLowerCase('tr').replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ç/g, 'c')
 }
@@ -148,7 +176,7 @@ export function searchFoods(q: string, extra: Food[] = []): Food[] {
 
 export interface OffProduct { name: string; brand?: string; kcal: number; p: number; c: number; f: number; serving?: number }
 
-function parseOff(pr: any): OffProduct | null {
+export function parseOff(pr: any): OffProduct | null {
   const n = pr.nutriments ?? {}
   const kcal = n['energy-kcal_100g'] ?? (n['energy_100g'] ? n['energy_100g'] / 4.184 : undefined)
   const name = pr.product_name_tr || pr.product_name
