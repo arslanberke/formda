@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons'
 import React from 'react'
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type StyleProp, type TextInputProps, type ViewStyle } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -124,10 +125,32 @@ export function Segment<T extends string>({ options, value, onChange }: { option
   )
 }
 
+// Üst çubuk (iOS kuralı): solda geri/vazgeç, sağda kapat/kaydet.
+export function TopBar({ left, right }: { left?: { label: string; onPress: () => void; back?: boolean }; right?: { label: string; onPress: () => void; disabled?: boolean } }) {
+  return (
+    <View style={styles.topBar}>
+      {left ? (
+        <Pressable onPress={left.onPress} hitSlop={12} accessibilityRole="button" accessibilityLabel={left.label} style={styles.barBtn}>
+          {left.back && <Ionicons name="chevron-back" size={20} color={C.accent} style={{ marginLeft: -4 }} />}
+          <Text style={styles.barTxt}>{left.label}</Text>
+        </Pressable>
+      ) : <View />}
+      {right ? (
+        <Pressable onPress={right.onPress} disabled={right.disabled} hitSlop={12} accessibilityRole="button" accessibilityLabel={right.label} style={styles.barBtn}>
+          <Text style={[styles.barTxt, { fontFamily: F.semi }, right.disabled && { opacity: 0.35 }]}>{right.label}</Text>
+        </Pressable>
+      ) : <View />}
+    </View>
+  )
+}
+
 export function Divider() { return <View style={{ height: 1, backgroundColor: C.border, marginVertical: 12 }} /> }
 
 export const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.bg },
+  topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', minHeight: 36, marginBottom: 8 },
+  barBtn: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6 },
+  barTxt: { color: C.accent, fontFamily: F.medium, fontSize: 16 },
   card: { backgroundColor: C.card, borderRadius: R, padding: 18, marginBottom: 12, borderWidth: 1, borderColor: C.border },
   h1: { color: C.text, fontSize: 28, fontFamily: F.display, letterSpacing: -1.2, marginBottom: 6 },
   h2: { color: C.text, fontSize: 17, fontFamily: F.display, letterSpacing: -0.6, marginBottom: 8 },

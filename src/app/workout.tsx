@@ -80,7 +80,7 @@ export default function Workout() {
             <Text style={st.tileTxt}>{m}</Text>
           </Animated.View>
         ))}
-        <Button title="Tamam" style={{ marginTop: 10 }} onPress={() => router.replace('/(tabs)')} />
+        <Button title="Tamam" style={{ marginTop: 10 }} onPress={() => router.dismissTo('/(tabs)')} />
       </Screen>
     )
   }

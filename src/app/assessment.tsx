@@ -1,7 +1,7 @@
 import { router } from 'expo-router'
 import React, { useEffect, useRef, useState } from 'react'
 import { Alert, Text, View } from 'react-native'
-import { Button, Card, Chip, H1, H2, Muted, NumberInput, P, Row, Screen, Steps, Wrap } from '../components/ui'
+import { Button, Card, Chip, H1, H2, Muted, NumberInput, P, Row, Screen, Steps, TopBar, Wrap } from '../components/ui'
 import { Figure } from '../components/Figure'
 import { EXERCISE_MAP, PATTERN_NAMES } from '../data/exercises'
 import { evaluate, generateProgram, LEVEL_NAMES, testsFor, availableLoads } from '../lib/program'
@@ -12,6 +12,7 @@ import type { Pattern } from '../lib/types'
 export default function Assessment() {
   const profile = useStore((s) => s.profile)!
   const weightKg = useStore((s) => s.body[s.body.length - 1]?.weightKg ?? 75)
+  const [retake] = useState(() => getState().assessment !== null && router.canGoBack())
   const tests = testsFor(profile)
   const [i, setI] = useState(-1)
   const [results, setResults] = useState<Record<string, number>>({})
@@ -74,7 +75,7 @@ export default function Assessment() {
             ))}
           </Card>
         ))}
-        <Button title="Başlayalım" onPress={() => router.replace('/(tabs)')} />
+        <Button title="Başlayalım" onPress={() => router.dismissTo('/(tabs)')} />
       </Screen>
     )
   }
@@ -82,6 +83,7 @@ export default function Assessment() {
   if (i === -1) {
     return (
       <Screen padBottom={40}>
+        {retake ? <TopBar left={{ label: 'Vazgeç', onPress: () => router.back() }} /> : null}
         <H1>Kapasite testi</H1>
         <P muted style={{ marginBottom: 12 }}>{tests.length} test. Her birinde elinden gelenin en iyisini yap ama formu bozma; sakatlanmak yok.</P>
         {tests.map((tt, k) => (
@@ -105,6 +107,7 @@ export default function Assessment() {
 
   return (
     <Screen padBottom={40}>
+      {retake ? <TopBar left={{ label: 'Vazgeç', onPress: () => Alert.alert('Testten çık?', 'Bu testteki sonuçlar kaydedilmez, eski seviyen kalır.', [{ text: 'Devam et' }, { text: 'Çık', style: 'destructive', onPress: () => { stopTimer(); router.back() } }]) }} /> : null}
       <Steps n={tests.length} i={i} label={`Test ${i + 1} / ${tests.length}`} />
       <H1>{t.title}</H1>
       {ex && (

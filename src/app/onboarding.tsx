@@ -1,7 +1,7 @@
 import { router } from 'expo-router'
 import React, { useState } from 'react'
 import { Alert, Text, View } from 'react-native'
-import { Button, Card, Chip, H1, H2, Input, Muted, NumberInput, P, Row, Screen, Segment, Steps, Wrap } from '../components/ui'
+import { Button, Card, Chip, H1, H2, Input, Muted, NumberInput, P, Row, Screen, Segment, Steps, Wrap, TopBar } from '../components/ui'
 import { EQUIPMENT } from '../data/exercises'
 import { generateProgram } from '../lib/program'
 import { setState, todayStr, useStore } from '../lib/store'
@@ -65,6 +65,7 @@ export default function Onboarding() {
 
   return (
     <Screen padBottom={40}>
+      {existing ? <TopBar left={{ label: 'Vazgeç', onPress: () => router.back() }} /> : null}
       <Steps n={4} i={step} label={`Adım ${step + 1} / 4`} />
       {step === 0 && (
         <View>

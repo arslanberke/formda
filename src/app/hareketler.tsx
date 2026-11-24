@@ -2,7 +2,7 @@ import { router } from 'expo-router'
 import React, { useMemo, useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { Figure } from '../components/Figure'
-import { Chip, H1, Muted, Screen, Wrap } from '../components/ui'
+import { Chip, H1, Muted, Screen, TopBar, Wrap } from '../components/ui'
 import { EQUIPMENT, EXERCISES, PATTERN_NAMES, hasEquipment } from '../data/exercises'
 import { useStore } from '../lib/store'
 import { C, F } from '../lib/theme'
@@ -23,6 +23,7 @@ export default function Library() {
 
   return (
     <Screen padBottom={40}>
+      <TopBar left={{ label: 'Geri', back: true, onPress: () => router.back() }} />
       <H1>Hareketler</H1>
       <Muted style={{ marginBottom: 12 }}>{list.length} hareket · elindeki ekipmanla neler yapabileceğine bak, dokununca nasıl yapıldığını gösteriyor.</Muted>
       <Wrap>

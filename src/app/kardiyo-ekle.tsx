@@ -1,7 +1,7 @@
 import { router } from 'expo-router'
 import React, { useState } from 'react'
-import { Text, View } from 'react-native'
-import { Button, Card, Chip, H1, Muted, NumberInput, Row, Screen, Wrap } from '../components/ui'
+import { Alert, Text, View } from 'react-native'
+import { Button, Card, Chip, H1, Muted, NumberInput, Row, Screen, TopBar, Wrap } from '../components/ui'
 import { CARDIO_KINDS, estimateKcal } from '../lib/cardio'
 import { setState, todayStr, uid, useStore } from '../lib/store'
 import { C, F } from '../lib/theme'
@@ -20,6 +20,9 @@ export default function CardioAdd() {
   const treadmill = kind === 'treadmill_run' || kind === 'treadmill_walk'
   const est = minutes ? estimateKcal({ kind, minutes, km, inclinePct: incline }, weightKg) : 0
 
+  const dirty = minutes !== 30 || km !== undefined || hr !== undefined || kcal !== undefined || incline !== undefined
+  const cancel = () => (dirty ? Alert.alert('Kaydetmeden çık?', 'Girdiğin bilgiler silinecek.', [{ text: 'Devam et' }, { text: 'Çık', style: 'destructive', onPress: () => router.back() }]) : router.back())
+
   const save = () => {
     if (!minutes) return
     const d = new Date(); d.setDate(d.getDate() - daysAgo)
@@ -29,6 +32,7 @@ export default function CardioAdd() {
 
   return (
     <Screen padBottom={40}>
+      <TopBar left={{ label: 'Vazgeç', onPress: cancel }} />
       <H1>Koşu / kardiyo ekle</H1>
       <Muted style={{ marginBottom: 14 }}>Apple Watch&apos;la yaptığın koşuyu buraya gir: antrenmanı saatinde bitirince iPhone&apos;da Fitness uygulaması → Antrenmanlar&apos;da süre, mesafe, ortalama nabız ve aktif kalori yazar.</Muted>
       <Wrap>
@@ -52,10 +56,7 @@ export default function CardioAdd() {
         {!kcal && est > 0 && <Text style={{ color: C.muted, fontFamily: F.body, fontSize: 13, marginTop: 4 }}>Kalori girmezsen yaklaşık <Text style={{ color: C.accent }}>{est} kcal</Text> sayacağım.</Text>}
       </Card>
       {treadmill && <Muted style={{ marginBottom: 12 }}>İpucu: Bantta saat mesafeyi kolundan tahmin eder ve biraz şaşabilir. Bitince saatin sorarsa bandın ekranındaki mesafeyi gir, saat zamanla kalibre olur.</Muted>}
-      <Row>
-        <Button kind="secondary" title="Vazgeç" style={{ flex: 1 }} onPress={() => router.back()} />
-        <Button title="Kaydet" style={{ flex: 2 }} disabled={!minutes} onPress={save} />
-      </Row>
+      <Button title="Kaydet" disabled={!minutes} onPress={save} />
     </Screen>
   )
 }

@@ -27,9 +27,9 @@ export default function TabsLayout() {
       sceneStyle: { backgroundColor: C.bg },
     }}>
       <Tabs.Screen name="index" options={{ title: 'Bugün', tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'sunny' : 'sunny-outline'} size={21} color={color as string} /> }} />
-      <Tabs.Screen name="antrenman" options={{ title: 'Antrenman', tabBarIcon: ({ color }) => <Ionicons name="barbell-outline" size={22} color={color as string} /> }} />
+      <Tabs.Screen name="antrenman" options={{ title: 'Antrenman', tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'barbell' : 'barbell-outline'} size={22} color={color as string} /> }} />
       <Tabs.Screen name="beslenme" options={{ title: 'Beslenme', tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'leaf' : 'leaf-outline'} size={20} color={color as string} /> }} />
-      <Tabs.Screen name="vucut" options={{ title: 'Vücut', tabBarIcon: ({ color }) => <Ionicons name="body-outline" size={21} color={color as string} /> }} />
+      <Tabs.Screen name="vucut" options={{ title: 'Vücut', tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'body' : 'body-outline'} size={21} color={color as string} /> }} />
       <Tabs.Screen name="profil" options={{ title: 'Ben', tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'person' : 'person-outline'} size={20} color={color as string} /> }} />
     </Tabs>
   )

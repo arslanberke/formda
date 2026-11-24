@@ -120,7 +120,7 @@ export default function Home() {
       </View>
 
       <Animated.View entering={enter(5)}>
-        <Pressable onPress={() => router.push('/(tabs)/beslenme')} style={[s.card, { flexDirection: 'row', alignItems: 'center', gap: 18 }]}>
+        <Pressable onPress={() => router.navigate('/(tabs)/beslenme')} style={[s.card, { flexDirection: 'row', alignItems: 'center', gap: 18 }]}>
           <Ring size={104} stroke={9} value={kcal} max={tg.kcal} color={kcal > tg.kcal * 1.1 ? C.danger : C.accent}>
             <CountUp to={Math.max(0, tg.kcal - kcal)} style={s.ringNum} />
             <Text style={s.ringLbl}>kalan kcal</Text>
@@ -140,7 +140,7 @@ export default function Home() {
       </Animated.View>
 
       <Animated.View entering={enter(6)} style={{ flexDirection: 'row', gap: 12 }}>
-        <Pressable onPress={() => router.push('/(tabs)/beslenme')} style={[s.card, { flex: 1 }]}>
+        <Pressable onPress={() => router.navigate('/(tabs)/beslenme')} style={[s.card, { flex: 1 }]}>
           <Text style={s.kicker}>SU</Text>
           <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
             <CountUp to={ml / 1000} decimals={1} style={s.mid} />
@@ -153,7 +153,7 @@ export default function Home() {
           </View>
           <Text style={[s.idx, { marginTop: 8 }]}>hedef {(tg.waterMl / 1000).toFixed(1)} L</Text>
         </Pressable>
-        <Pressable onPress={() => router.push('/(tabs)/vucut')} style={[s.card, { flex: 1 }]}>
+        <Pressable onPress={() => router.navigate('/(tabs)/vucut')} style={[s.card, { flex: 1 }]}>
           <Text style={s.kicker}>KİLO</Text>
           <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
             <CountUp to={weightKg} decimals={weightKg % 1 ? 1 : 0} style={s.mid} />

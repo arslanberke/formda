@@ -2,7 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router'
 import React from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { Figure } from '../../components/Figure'
-import { Button, Card, H1, H2, Muted, P, Screen } from '../../components/ui'
+import { Card, H1, TopBar, H2, Muted, P, Screen } from '../../components/ui'
 import { EQUIPMENT, EXERCISE_MAP, PATTERN_NAMES } from '../../data/exercises'
 import { hasMove } from '../../data/moves'
 import { alternatives } from '../../lib/program'
@@ -16,6 +16,7 @@ export default function ExerciseDetail() {
   if (!ex) return <Screen><P>Hareket bulunamadı.</P></Screen>
   return (
     <Screen padBottom={40}>
+      <TopBar right={{ label: 'Kapat', onPress: () => router.back() }} />
       <H1>{ex.name}</H1>
       <Muted style={{ marginBottom: 12 }}>{PATTERN_NAMES[ex.pattern]} · {ex.muscles}</Muted>
       <View style={{ alignItems: 'center', marginVertical: 8 }}>
@@ -52,7 +53,6 @@ export default function ExerciseDetail() {
           ))}
         </Card>
       )}
-      <Button title="Kapat" kind="secondary" onPress={() => router.back()} />
     </Screen>
   )
 }

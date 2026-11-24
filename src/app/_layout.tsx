@@ -36,7 +36,7 @@ export default function RootLayout() {
             <Stack.Screen name="exercise/[id]" options={{ presentation: 'modal', contentStyle: { backgroundColor: C.solid } }} />
             <Stack.Screen name="yemek-ekle" options={{ presentation: 'modal', contentStyle: { backgroundColor: C.solid } }} />
             <Stack.Screen name="kardiyo-ekle" options={{ presentation: 'modal', contentStyle: { backgroundColor: C.solid } }} />
-            <Stack.Screen name="hareketler" options={{ presentation: 'modal', contentStyle: { backgroundColor: C.solid } }} />
+            <Stack.Screen name="hareketler" />
           </Stack>
         )}
       </SafeAreaProvider>

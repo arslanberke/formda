@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router'
 import React, { useMemo, useState } from 'react'
 import { ActivityIndicator, Pressable, Text, View } from 'react-native'
-import { Button, Card, Chip, H1, H2, Input, Muted, NumberInput, Row, Screen, Wrap } from '../components/ui'
+import { Button, Card, Chip, H1, H2, Input, Muted, NumberInput, Row, Screen, Wrap, TopBar } from '../components/ui'
 import { searchFoods, searchOpenFoodFacts, type Food } from '../data/foods'
 import { setState, todayStr, uid, useStore } from '../lib/store'
 import { C, F } from '../lib/theme'
@@ -107,10 +107,8 @@ export default function FoodAdd() {
   const list = off ?? results
   return (
     <Screen scroll={false} padBottom={0} style={{ paddingBottom: 0 }}>
-      <Row style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <H1 style={{ marginBottom: 0 }}>Yiyecek ekle</H1>
-        <Button small kind="ghost" title="Kapat" onPress={() => router.back()} />
-      </Row>
+      <TopBar right={{ label: 'Kapat', onPress: () => router.back() }} />
+      <H1>Yiyecek ekle</H1>
       <Input value={q} onChangeText={(t) => { setQ(t); setOff(null) }} placeholder="Ara: tavuk, ekmek, ayran…" autoFocus autoCorrect={false} />
       <View style={{ flex: 1 }}>
         {q.trim() === '' ? (
