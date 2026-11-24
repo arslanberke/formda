@@ -1,15 +1,18 @@
 import { router, useLocalSearchParams } from 'expo-router'
 import React from 'react'
-import { Text, View } from 'react-native'
+import { Pressable, Text, View } from 'react-native'
 import { Figure } from '../../components/Figure'
 import { Button, Card, H1, H2, Muted, P, Screen } from '../../components/ui'
 import { EQUIPMENT, EXERCISE_MAP, PATTERN_NAMES } from '../../data/exercises'
 import { hasMove } from '../../data/moves'
+import { alternatives } from '../../lib/program'
+import { useStore } from '../../lib/store'
 import { C, F } from '../../lib/theme'
 
 export default function ExerciseDetail() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const ex = EXERCISE_MAP[id ?? '']
+  const profile = useStore((s) => s.profile)
   if (!ex) return <Screen><P>Hareket bulunamadı.</P></Screen>
   return (
     <Screen padBottom={40}>
@@ -34,9 +37,21 @@ export default function ExerciseDetail() {
       </Card>
       <Card>
         <H2>Ekipman</H2>
-        <P>{ex.equipment.map((e) => EQUIPMENT.find((q) => q.id === e)?.name ?? e).join(' veya ')}</P>
+        <P>{ex.equipment.map((e) => EQUIPMENT.find((q) => q.id === e)?.name ?? e).join(' + ') || 'Ekipman gerekmez'}</P>
         <Muted style={{ marginTop: 6 }}>Önerilen tekrar aralığı: {ex.repRange[0]}–{ex.repRange[1]}{ex.unit === 'sec' ? ' sn' : ''}{ex.perSide ? ' (her taraf)' : ''}</Muted>
       </Card>
+ {profile && ex.pattern !== 'cardio' && alternatives(profile, ex.id).length > 0 && (
+        <Card>
+          <H2>Elindekilerle benzer hareketler</H2>
+          {alternatives(profile, ex.id).slice(0, 8).map((a) => (
+            <Pressable key={a.id} onPress={() => router.replace(`/exercise/${a.id}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4 }}>
+              <Figure id={a.id} size={44} />
+              <Text style={{ color: C.text, fontFamily: F.medium, fontSize: 14, flex: 1 }}>{a.name}</Text>
+              <Text style={{ color: a.tier < ex.tier ? C.muted : a.tier > ex.tier ? C.warn : C.accent, fontFamily: F.body, fontSize: 12 }}>{a.tier < ex.tier ? 'daha kolay' : a.tier > ex.tier ? 'daha zor' : 'benzer'}</Text>
+            </Pressable>
+          ))}
+        </Card>
+      )}
       <Button title="Kapat" kind="secondary" onPress={() => router.back()} />
     </Screen>
   )

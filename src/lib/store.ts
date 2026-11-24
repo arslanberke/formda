@@ -16,6 +16,7 @@ export const emptyState: AppState = {
   body: [],
   customFoods: [],
   activeWorkout: null,
+  cardio: [],
 }
 
 let state: AppState = emptyState

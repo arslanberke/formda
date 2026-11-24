@@ -3,14 +3,14 @@ import { useKeepAwake } from 'expo-keep-awake'
 import { router, useLocalSearchParams } from 'expo-router'
 import React, { useEffect, useRef, useState } from 'react'
 import { Ionicons } from '@expo/vector-icons'
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated'
 import { Figure } from '../components/Figure'
 import { Sheet } from '../components/Sheet'
 import { Button, Chip, Muted, NumberInput, Row, Screen } from '../components/ui'
-import { EXERCISE_MAP } from '../data/exercises'
+import { EQUIPMENT, EXERCISE_MAP, type Exercise } from '../data/exercises'
 import { hasMove } from '../data/moves'
-import { describeSet, progressAfterWorkout, stepLoad } from '../lib/program'
+import { alternatives, describeSet, progressAfterWorkout, stepLoad, swapPrescription } from '../lib/program'
 import { getState, setState, todayStr, uid, useStore } from '../lib/store'
 import { C, F } from '../lib/theme'
 import type { ExerciseLog, Feel, WorkoutLog } from '../lib/types'
@@ -27,6 +27,7 @@ export default function Workout() {
   const restRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [summary, setSummary] = useState<string[] | null>(null)
   const [askFeel, setAskFeel] = useState(false)
+  const [swapOpen, setSwapOpen] = useState(false)
 
   // aktif antrenman yoksa oluştur
   useEffect(() => {
@@ -62,6 +63,7 @@ export default function Workout() {
   const entries = active?.entries ?? []
   const e = entries[cur]
   const ex = e ? EXERCISE_MAP[e.exerciseId] : null
+  const alts = ex && ex.pattern !== 'cardio' ? alternatives(profile, ex.id).filter((a) => !entries.some((x) => x.exerciseId === a.id)) : []
   const doneSets = entries.reduce((a, x) => a + x.sets.filter((s) => s.done).length, 0)
   const totalSets = entries.reduce((a, x) => a + x.sets.length, 0)
 
@@ -107,6 +109,19 @@ export default function Workout() {
   const setFeel = (f: Feel) => update((w) => { const n = structuredClone(w); n.entries[cur].feel = f; return n })
   const addSet = () => update((w) => { const n = structuredClone(w); const en = n.entries[cur]; en.sets.push({ reps: en.target.reps, weightKg: en.target.weightKg, done: false }); return n })
 
+  const doSwap = (nx: Exercise) => {
+    const bw = getState().body.at(-1)?.weightKg ?? 75
+    update((w) => {
+      const n = structuredClone(w)
+      const en = n.entries[cur]
+      const target = swapPrescription(profile, assessment, nx, en.target, bw)
+      n.entries[cur] = { exerciseId: nx.id, swappedFrom: en.swappedFrom ?? en.exerciseId, target, sets: Array.from({ length: target.sets }, () => ({ reps: target.reps, weightKg: target.weightKg, done: false })) }
+      return n
+    })
+    setSwapOpen(false)
+    Haptics.selectionAsync().catch(() => {})
+  }
+
   const finish = () => {
     const w = getState().activeWorkout!
     const touched = w.entries.filter((x) => x.sets.some((s) => s.done))
@@ -123,7 +138,7 @@ export default function Workout() {
         msgs.push(`${EXERCISE_MAP[en.exerciseId].name}: ${r.message}`)
         delete progress[en.exerciseId]
         progress[r.prescription.exerciseId] = r.progress
-        program.days.forEach((d) => d.items.forEach((it, k) => { if (it.exerciseId === en.exerciseId) d.items[k] = r.prescription }))
+        program.days.forEach((d) => d.items.forEach((it, k) => { if (it.exerciseId === (en.swappedFrom ?? en.exerciseId)) d.items[k] = r.prescription }))
       }
       const done: WorkoutLog = { ...w, finishedAt: new Date().toISOString() }
       return { activeWorkout: null, workouts: [...s.workouts, done], progress, program }
@@ -169,6 +184,12 @@ export default function Workout() {
         <Text style={st.name}>{ex.name}</Text>
         <Text style={st.sub}>Hedef: {describeSet(e.target)}</Text>
         <Pressable onPress={() => router.push(`/exercise/${ex.id}`)}><Text style={st.tip}>{ex.tips[0]}  <Text style={{ color: C.accent }}>Nasıl yapılır ›</Text></Text></Pressable>
+        {alts.length > 0 && (
+          <Pressable onPress={() => setSwapOpen(true)} hitSlop={8} style={st.swapBtn} accessibilityLabel="Hareketi değiştir">
+            <Ionicons name="swap-horizontal" size={15} color={C.accent} />
+            <Text style={{ color: C.text, fontFamily: F.medium, fontSize: 13 }}>Değiştir · {alts.length} seçenek</Text>
+          </Pressable>
+        )}
 
         {e.target.weightKg !== undefined && (
           <View style={[st.tile, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }]}>
@@ -223,6 +244,24 @@ export default function Workout() {
         </Row>
       </Sheet>
 
+      <Sheet visible={swapOpen} onClose={() => setSwapOpen(false)}>
+        <Text style={st.kicker}>BUNUN YERİNE</Text>
+        <Text style={[st.name, { marginBottom: 4 }]}>Ne yapmak istersin?</Text>
+        <Text style={[st.sub, { marginBottom: 12 }]}>Aynı kası çalıştıran, elindeki ekipmanla yapılabilen hareketler. Seçtiğin program­da kalıcı olur.</Text>
+        <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
+          {alts.map((a) => (
+            <Pressable key={a.id} onPress={() => doSwap(a)} style={({ pressed }) => [st.tile, { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 }, pressed && { backgroundColor: 'rgba(217,255,61,0.12)' }]}>
+              <Figure id={a.id} size={56} />
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: C.text, fontFamily: F.semi, fontSize: 15 }}>{a.name}</Text>
+                <Text style={[st.sub, { fontSize: 12 }]}>{'●'.repeat(Math.min(5, Math.max(1, Math.ceil(a.tier / 1.4))))} · {a.equipment.length ? a.equipment.map((q) => EQUIPMENT.find((x) => x.id === q)?.name ?? q).join(' + ') : 'Ekipmansız'}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={C.dim} />
+            </Pressable>
+          ))}
+        </ScrollView>
+      </Sheet>
+
       <Sheet visible={askFeel} onClose={() => setAskFeel(false)}>
         <Text style={st.kicker}>{ex.name.toLocaleUpperCase('tr')}</Text>
         <Text style={[st.name, { marginBottom: 16 }]}>Nasıl geçti?</Text>
@@ -252,5 +291,6 @@ const st = StyleSheet.create({
   tileTxt: { color: C.text, fontFamily: F.body, fontSize: 15, lineHeight: 21 },
   setIdx: { color: C.dim, fontFamily: F.display, fontSize: 15, width: 28 },
   check: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border, backgroundColor: C.card2 },
+  swapBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', marginTop: 12, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 16, borderWidth: 1, borderColor: C.border, backgroundColor: C.card },
   round: { height: 40, width: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: C.card2, borderWidth: 1, borderColor: C.border },
 })

@@ -2,14 +2,15 @@ import * as DocumentPicker from 'expo-document-picker'
 import { File, Paths } from 'expo-file-system'
 import { router } from 'expo-router'
 import * as Sharing from 'expo-sharing'
-import React from 'react'
-import { Alert, StyleSheet, Text, View } from 'react-native'
+import React, { useState } from 'react'
+import { Alert, Platform, StyleSheet, Text, View } from 'react-native'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import { CountUp } from '../../components/motion'
-import { Button, Card, H2, Muted, P, Row, Screen } from '../../components/ui'
+import { Button, Card, Chip, H2, Muted, P, Row, Screen, Wrap } from '../../components/ui'
+import { applyReminders, WEEKDAYS } from '../../lib/reminders'
 import { EQUIPMENT } from '../../data/exercises'
 import { age, targets, tdee } from '../../lib/nutrition'
-import { exportJson, replaceState, resetState, useStore } from '../../lib/store'
+import { exportJson, replaceState, resetState, setState, useStore } from '../../lib/store'
 import { C, F } from '../../lib/theme'
 import type { AppState } from '../../lib/types'
 
@@ -18,6 +19,16 @@ const GOALS = { lose: 'Kilo vermek', maintain: 'Formda kalmak', gain: 'Kas yapma
 export default function Profil() {
   const profile = useStore((s) => s.profile)!
   const weightKg = useStore((s) => s.body[s.body.length - 1]?.weightKg ?? 75)
+  const saved = useStore((s) => s.reminders)
+  const [remDays, setRemDays] = useState<number[]>(saved?.days ?? [])
+  const [remHour, setRemHour] = useState(saved?.hour ?? 19)
+  const saveReminders = async () => {
+    const r = remDays.length ? { days: remDays, hour: remHour, minute: 0 } : null
+    const ok = await applyReminders(r).catch(() => false)
+    if (!ok) return Alert.alert('Bildirim izni yok', 'Ayarlar > Bildirimler kısmından izin verip tekrar dene.')
+    setState({ reminders: r })
+    Alert.alert(r ? 'Hatırlatıcı kuruldu' : 'Hatırlatıcı kapatıldı', r ? `${remDays.length} gün, saat ${String(remHour).padStart(2, '0')}:00` : '')
+  }
   const workouts = useStore((s) => s.workouts.filter((w) => w.finishedAt).length)
   const tg = targets(profile, weightKg)
 
@@ -67,6 +78,18 @@ export default function Profil() {
         <Button title="Profili / ekipmanı düzenle" kind="secondary" style={{ marginTop: 12 }} onPress={() => router.push('/onboarding')} />
         <Button title="Kapasite testini yap / yenile" kind="secondary" style={{ marginTop: 8 }} onPress={() => router.push('/assessment')} />
         <Muted style={{ marginTop: 6 }}>Ekipman değiştirirsen Antrenman sekmesinden «Programı yenile» de.</Muted>
+      </Card>
+
+      <Card>
+        <H2>Antrenman hatırlatıcısı</H2>
+        <Muted style={{ marginBottom: 10 }}>Seçtiğin günlerde bildirim gelir. Haftada {profile.daysPerWeek} gün seçmen yeterli.</Muted>
+        <Wrap>
+          {WEEKDAYS.map((d) => <Chip key={d.n} label={d.label} on={remDays.includes(d.n)} onPress={() => setRemDays((x) => (x.includes(d.n) ? x.filter((y) => y !== d.n) : [...x, d.n]))} />)}
+        </Wrap>
+        <Wrap>
+          {[7, 9, 12, 17, 18, 19, 20, 21].map((h) => <Chip key={h} style={{ marginTop: 8 }} label={`${String(h).padStart(2, '0')}:00`} on={remHour === h} onPress={() => setRemHour(h)} />)}
+        </Wrap>
+        {Platform.OS === 'web' ? <Muted style={{ marginTop: 10 }}>Bildirimler telefonda çalışır.</Muted> : <Button small title={remDays.length ? 'Hatırlatıcıyı kaydet' : 'Hatırlatıcıyı kapat'} style={{ marginTop: 12 }} onPress={saveReminders} />}
       </Card>
 
       <Card>

@@ -3,7 +3,7 @@ export type Goal = 'lose' | 'maintain' | 'gain'
 export type Activity = 'sedentary' | 'light' | 'moderate' | 'active'
 export type EquipmentId =
   | 'bodyweight' | 'dumbbell' | 'barbell' | 'kettlebell' | 'band' | 'pullupbar' | 'bench' | 'box' | 'treadmill' | 'bike' | 'gym'
-export type Pattern = 'squat' | 'hinge' | 'push' | 'pull' | 'vpush' | 'lunge' | 'core' | 'cardio'
+export type Pattern = 'squat' | 'hinge' | 'push' | 'pull' | 'vpush' | 'lunge' | 'core' | 'arms' | 'cardio'
 export type Level = 0 | 1 | 2 | 3 // 0 başlangıç, 1 yeni, 2 orta, 3 ileri
 export type Feel = 'easy' | 'ok' | 'hard'
 
@@ -44,7 +44,7 @@ export interface Assessment {
 }
 
 export interface SetLog { reps: number; weightKg?: number; done: boolean }
-export interface ExerciseLog { exerciseId: string; target: Prescription; sets: SetLog[]; feel?: Feel }
+export interface ExerciseLog { exerciseId: string; target: Prescription; sets: SetLog[]; feel?: Feel; swappedFrom?: string }
 export interface WorkoutLog {
   id: string
   date: string         // YYYY-MM-DD
@@ -88,6 +88,18 @@ export interface BodyEntry {
   thigh?: number
 }
 
+export type CardioKind = 'treadmill_run' | 'treadmill_walk' | 'outdoor_run' | 'walk' | 'bike' | 'other'
+export interface CardioLog {
+  id: string
+  date: string
+  kind: CardioKind
+  minutes: number
+  km?: number
+  avgHr?: number
+  kcal?: number
+  inclinePct?: number
+}
+
 export interface AppState {
   version: 1
   profile: Profile | null
@@ -100,4 +112,6 @@ export interface AppState {
   body: BodyEntry[]
   customFoods: { name: string; kcal: number; protein: number; carbs: number; fat: number }[]
   activeWorkout: WorkoutLog | null
+  cardio: CardioLog[]
+  reminders?: { days: number[]; hour: number; minute: number } | null
 }

@@ -91,6 +91,7 @@ export function evaluate(p: Profile, weightKg: number, results: Record<string, n
   if (levels.vpush === undefined) levels.vpush = Math.max(0, (levels.push ?? 0) - 1) as Level
   if (levels.lunge === undefined) levels.lunge = levels.squat ?? 0
   levels.cardio = levels.squat ?? 0
+  levels.arms = Math.min(levels.push ?? 0, levels.pull ?? 0) as Level
   return { date: new Date().toISOString(), results, weights, variants, levels, oneRm }
 }
 
@@ -229,8 +230,8 @@ export function generateProgram(p: Profile, a: Assessment, weightKg: number): Pr
   const cardio = cardioFinisher(p, a)
   const withCardio = (d: ProgramDay): ProgramDay => (cardio ? { ...d, items: [...d.items, cardio] } : d)
   if (p.daysPerWeek <= 3) {
-    const A: ProgramDay = { name: 'Tüm Vücut A', items: [warm, pick('squat'), pick('push'), pick('pull'), pick('hinge'), pick('core')].filter(Boolean) as Prescription[] }
-    const B: ProgramDay = { name: 'Tüm Vücut B', items: [warm, pick('hinge', true), pick('vpush'), pick('pull', true), pick('lunge'), pick('core', true)].filter(Boolean) as Prescription[] }
+    const A: ProgramDay = { name: 'Tüm Vücut A', items: [warm, pick('squat'), pick('push'), pick('pull'), pick('hinge'), pick('core'), L('arms') >= 1 ? pick('arms') : null].filter(Boolean) as Prescription[] }
+    const B: ProgramDay = { name: 'Tüm Vücut B', items: [warm, pick('hinge', true), pick('vpush'), pick('pull', true), pick('lunge'), pick('core', true), L('arms') >= 1 ? pick('arms', true) : null].filter(Boolean) as Prescription[] }
     days.push(A, B)
     if (p.daysPerWeek === 3) {
       const Cc: ProgramDay = { name: 'Tüm Vücut C', items: [warm, pick('squat', true), pick('push', true), pick('pull'), pick('lunge', true), pick('core')].filter(Boolean) as Prescription[] }
@@ -238,9 +239,9 @@ export function generateProgram(p: Profile, a: Assessment, weightKg: number): Pr
     }
     return { createdAt: new Date().toISOString(), days: days.map(withCardio), split: 'full' }
   }
-  const U1: ProgramDay = { name: 'Üst Vücut A', items: [warm, pick('push'), pick('pull'), pick('vpush'), pick('pull', true), pick('core')].filter(Boolean) as Prescription[] }
+  const U1: ProgramDay = { name: 'Üst Vücut A', items: [warm, pick('push'), pick('pull'), pick('vpush'), pick('pull', true), L('arms') >= 1 ? pick('arms') : null, pick('core')].filter(Boolean) as Prescription[] }
   const L1: ProgramDay = { name: 'Alt Vücut A', items: [warm, pick('squat'), pick('hinge'), pick('lunge'), pick('core', true)].filter(Boolean) as Prescription[] }
-  const U2: ProgramDay = { name: 'Üst Vücut B', items: [warm, pick('vpush', true), pick('pull', true), pick('push', true), pick('core')].filter(Boolean) as Prescription[] }
+  const U2: ProgramDay = { name: 'Üst Vücut B', items: [warm, pick('vpush', true), pick('pull', true), pick('push', true), L('arms') >= 1 ? pick('arms', true) : null, pick('core')].filter(Boolean) as Prescription[] }
   const L2: ProgramDay = { name: 'Alt Vücut B', items: [warm, pick('hinge', true), pick('squat', true), pick('lunge', true), pick('core', true)].filter(Boolean) as Prescription[] }
   days.push(U1, L1, U2, L2)
   return { createdAt: new Date().toISOString(), days: days.map(withCardio), split: 'ul' }
@@ -314,4 +315,18 @@ export function describeSet(pres: Prescription): string {
   if (ex.unit === 'sec' && pres.reps >= 120) return `${Math.round(pres.reps / 60)} dk${w}`
   const unit = ex.unit === 'sec' ? 'sn' : 'tekrar'
   return `${pres.sets} set × ${pres.reps} ${unit}${side}${w}`
+}
+
+export function alternatives(p: Profile, exerciseId: string): Exercise[] {
+  const ex = EXERCISE_MAP[exerciseId]
+  if (!ex) return []
+  return EXERCISES.filter((e) => e.pattern === ex.pattern && e.id !== ex.id && hasEquipment(e, p.equipment)).sort((a, b) => a.tier - b.tier)
+}
+
+export function swapPrescription(p: Profile, a: Assessment | null, ex: Exercise, prev: Prescription, weightKg: number): Prescription {
+  if (a) {
+    const fresh = prescribe(p, ex, a, weightKg)
+    return { ...fresh, sets: prev.sets }
+  }
+  return { ...prev, exerciseId: ex.id, reps: ex.repRange[0], weightKg: startWeightForSwap(p, ex, prev) }
 }

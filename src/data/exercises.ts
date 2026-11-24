@@ -1,4 +1,5 @@
 import type { EquipmentId, Pattern } from '../lib/types'
+import { EXTRA } from './exercises-extra'
 
 export type LoadType = 'bw' | 'dumbbell' | 'barbell' | 'kettlebell' | 'band' | 'dumbbell1'
 
@@ -21,7 +22,7 @@ export interface Exercise {
 const IMG = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/'
 export const imgUrl = (ex: Exercise, i: 0 | 1 = 0) => `${IMG}${ex.img}/${i}.jpg`
 
-export const EXERCISES: Exercise[] = [
+const BASE: Exercise[] = [
   // ---------- İTİŞ (yatay) ----------
   {
     id: 'wall_pushup', name: 'Duvar Şınavı', pattern: 'push', tier: 1, equipment: [], load: 'bw', unit: 'reps', img: 'Incline_Push-Up', muscles: 'Göğüs, omuz, arka kol',
@@ -347,6 +348,8 @@ export const EXERCISES: Exercise[] = [
   },
 ]
 
+export const EXERCISES: Exercise[] = [...BASE, ...EXTRA]
+
 export const EXERCISE_MAP: Record<string, Exercise> = Object.fromEntries(EXERCISES.map((e) => [e.id, e]))
 
 export const PATTERN_NAMES: Record<Pattern, string> = {
@@ -357,6 +360,7 @@ export const PATTERN_NAMES: Record<Pattern, string> = {
   pull: 'Çekiş (sırt)',
   lunge: 'Tek bacak',
   core: 'Karın / core',
+  arms: 'Kol (pazı / arka kol)',
   cardio: 'Kondisyon',
 }
 
@@ -375,6 +379,6 @@ export const EQUIPMENT: { id: EquipmentId; name: string; desc: string; emoji: st
 
 export function hasEquipment(ex: Exercise, owned: EquipmentId[]) {
   const set = new Set<EquipmentId>(owned)
-  if (set.has('gym')) { set.add('dumbbell'); set.add('barbell'); set.add('bench'); set.add('pullupbar'); set.add('kettlebell'); set.add('treadmill'); set.add('bike') }
+  if (set.has('gym')) { set.add('dumbbell'); set.add('barbell'); set.add('bench'); set.add('pullupbar'); set.add('kettlebell'); set.add('treadmill'); set.add('bike'); set.add('band') }
   return ex.equipment.every((e) => set.has(e))
 }

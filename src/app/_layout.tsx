@@ -1,6 +1,7 @@
 import { Geist_300Light, Geist_400Regular, Geist_500Medium, Geist_600SemiBold } from '@expo-google-fonts/geist'
 import { Unbounded_500Medium, Unbounded_800ExtraBold } from '@expo-google-fonts/unbounded'
 import { useFonts } from 'expo-font'
+import * as Notifications from 'expo-notifications'
 import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useEffect } from 'react'
@@ -9,6 +10,10 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { hydrate, useHydrated } from '../lib/store'
 import { C } from '../lib/theme'
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({ shouldPlaySound: true, shouldSetBadge: false, shouldShowBanner: true, shouldShowList: true }),
+})
 
 export default function RootLayout() {
   const hydrated = useHydrated()
@@ -30,6 +35,8 @@ export default function RootLayout() {
             <Stack.Screen name="workout" options={{ gestureEnabled: false }} />
             <Stack.Screen name="exercise/[id]" options={{ presentation: 'modal', contentStyle: { backgroundColor: C.solid } }} />
             <Stack.Screen name="yemek-ekle" options={{ presentation: 'modal', contentStyle: { backgroundColor: C.solid } }} />
+            <Stack.Screen name="kardiyo-ekle" options={{ presentation: 'modal', contentStyle: { backgroundColor: C.solid } }} />
+            <Stack.Screen name="hareketler" options={{ presentation: 'modal', contentStyle: { backgroundColor: C.solid } }} />
           </Stack>
         )}
       </SafeAreaProvider>

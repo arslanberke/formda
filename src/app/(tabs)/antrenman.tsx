@@ -1,11 +1,13 @@
 import { router } from 'expo-router'
 import React from 'react'
-import { Alert, Text, View } from 'react-native'
+import { Alert, Pressable, Text, View } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { Button, Card, H1, H2, Muted, P, Row, Screen } from '../../components/ui'
 import { Figure } from '../../components/Figure'
 import { EXERCISE_MAP, PATTERN_NAMES } from '../../data/exercises'
 import { describeSet, generateProgram, LEVEL_NAMES } from '../../lib/program'
-import { setState, useStore } from '../../lib/store'
+import { CARDIO_KINDS, pace } from '../../lib/cardio'
+import { addDays, setState, todayStr, useStore } from '../../lib/store'
 import { C, F } from '../../lib/theme'
 import type { Pattern } from '../../lib/types'
 
@@ -16,7 +18,12 @@ export default function Antrenman() {
   const workouts = useStore((s) => s.workouts)
   const progress = useStore((s) => s.progress)
   const weightKg = useStore((s) => s.body[s.body.length - 1]?.weightKg ?? 75)
+  const cardio = useStore((s) => s.cardio)
   const done = workouts.filter((w) => w.finishedAt)
+  const weekAgo = addDays(todayStr(), -6)
+  const weekCardio = cardio.filter((c) => c.date >= weekAgo)
+  const weekKm = Math.round(weekCardio.reduce((a, c) => a + (c.km ?? 0), 0) * 10) / 10
+  const weekMin = weekCardio.reduce((a, c) => a + c.minutes, 0)
   const nextIdx = program ? done.length % program.days.length : 0
 
   if (!program || !assessment) {
@@ -59,6 +66,38 @@ export default function Antrenman() {
           <Button title="Bu antrenmanı yap" kind={di === nextIdx ? 'primary' : 'secondary'} small style={{ marginTop: 4 }} onPress={() => router.push({ pathname: '/workout', params: { day: String(di) } })} />
         </Card>
       ))}
+
+      <Row style={{ marginBottom: 6 }}>
+        <Pressable onPress={() => router.push('/hareketler')} style={({ pressed }) => [{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 14, borderRadius: 22, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }, pressed && { opacity: 0.7 }]}>
+          <Ionicons name="grid-outline" size={18} color={C.accent} />
+          <Text style={{ color: C.text, fontFamily: F.medium, fontSize: 14 }}>Tüm hareketler</Text>
+        </Pressable>
+        <Pressable onPress={() => router.push('/kardiyo-ekle')} style={({ pressed }) => [{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 14, borderRadius: 22, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }, pressed && { opacity: 0.7 }]}>
+          <Ionicons name="watch-outline" size={18} color={C.accent} />
+          <Text style={{ color: C.text, fontFamily: F.medium, fontSize: 14 }}>Koşu ekle</Text>
+        </Pressable>
+      </Row>
+
+      <H2>Koşu & kardiyo</H2>
+      <Card>
+        <Row style={{ alignItems: 'flex-end' }}>
+          <Text style={{ color: C.accent, fontFamily: F.displayBold, fontSize: 40, letterSpacing: -2 }}>{weekKm || weekMin}</Text>
+          <Text style={{ color: C.muted, fontFamily: F.body, fontSize: 13, marginBottom: 8 }}>{weekKm ? 'km' : 'dk'} bu hafta · {weekCardio.length} seans{weekKm ? ` · ${weekMin} dk` : ''}</Text>
+        </Row>
+        {cardio.length === 0 && <Muted style={{ marginTop: 4 }}>Apple Watch&apos;la koştuğunda süre/mesafeyi &quot;Koşu ekle&quot;den gir; haftalık toplamın burada birikir.</Muted>}
+        {[...cardio].reverse().slice(0, 6).map((c) => {
+          const k = CARDIO_KINDS.find((x) => x.value === c.kind)
+          return (
+            <Pressable key={c.id} onLongPress={() => Alert.alert('Kaydı sil?', '', [{ text: 'Vazgeç' }, { text: 'Sil', style: 'destructive', onPress: () => setState((s) => ({ cardio: s.cardio.filter((x) => x.id !== c.id) })) }])} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderTopWidth: 1, borderTopColor: C.border, marginTop: 6 }}>
+              <Text style={{ fontSize: 18, width: 30 }}>{k?.icon}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: C.text, fontFamily: F.medium, fontSize: 14 }}>{k?.label} · {c.minutes} dk{c.km ? ` · ${c.km} km` : ''}</Text>
+                <Muted>{c.date}{pace(c) ? ` · ${pace(c)}` : ''}{c.avgHr ? ` · ${c.avgHr} bpm` : ''}{c.kcal ? ` · ${c.kcal} kcal` : ''}</Muted>
+              </View>
+            </Pressable>
+          )
+        })}
+      </Card>
 
       <H2>Seviyelerin</H2>
       <Card>

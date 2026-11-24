@@ -35,7 +35,8 @@
           "imageWidth": 140
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -57,7 +58,11 @@
       "policy": "sdkVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/40d7e7ac-5283-4657-bf88-15aa32882b94"
+      "url": "https://u.expo.dev/40d7e7ac-5283-4657-bf88-15aa32882b94",
+      "requestHeaders": {
+        "expo-channel-name": "production"
+      },
+      "fallbackToCacheTimeout": 0
     }
   }
 }
