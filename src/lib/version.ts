@@ -1,7 +1,7 @@
 import * as Updates from 'expo-updates'
 
 // scripts/publish.sh her yayında bir artırır.
-export const RELEASE = 1
+export const RELEASE = 2
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
