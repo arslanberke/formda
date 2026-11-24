@@ -114,7 +114,7 @@ export interface AppState {
   foods: FoodEntry[]
   water: Record<string, number> // date -> ml
   body: BodyEntry[]
-  customFoods: { name: string; kcal: number; protein: number; carbs: number; fat: number }[]
+  customFoods: { name: string; kcal: number; protein: number; carbs: number; fat: number; portion?: [number, string]; recipe?: { name: string; grams: number }[] }[]
   activeWorkout: WorkoutLog | null
   cardio: CardioLog[]
   reminders?: { days: number[]; hour: number; minute: number } | null

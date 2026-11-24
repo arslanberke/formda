@@ -1,5 +1,9 @@
 // 100 g (ya da ml) başına değerler. portion: yaygın porsiyon (g) ve adı.
-export interface Food { name: string; kcal: number; p: number; c: number; f: number; portion?: [number, string]; tags?: string }
+// density: g/ml, kaşık/bardak ölçüsünü grama çevirmek için (yoksa 1, yani su gibi)
+export interface Food { name: string; kcal: number; p: number; c: number; f: number; portion?: [number, string]; tags?: string; density?: number }
+
+// Pratik ölçüler (Türk mutfağı, hacim): su bardağı 200 ml, çay bardağı 100 ml, yemek kaşığı 15 ml, tatlı kaşığı 5 ml, çay kaşığı 2.5 ml
+export const MEASURES: [string, number][] = [['yemek kaşığı', 15], ['tatlı kaşığı', 5], ['çay kaşığı', 2.5], ['su bardağı', 200], ['çay bardağı', 100]]
 
 export const FOODS: Food[] = [
   // Ekmek & tahıl
@@ -10,10 +14,10 @@ export const FOODS: Food[] = [
   { name: 'Pirinç pilavı', kcal: 170, p: 3, c: 30, f: 4, portion: [150, '1 porsiyon'] },
   { name: 'Bulgur pilavı', kcal: 130, p: 4, c: 24, f: 2.5, portion: [150, '1 porsiyon'] },
   { name: 'Makarna (haşlanmış)', kcal: 157, p: 5.8, c: 31, f: 0.9, portion: [200, '1 porsiyon'] },
-  { name: 'Yulaf ezmesi (kuru)', kcal: 375, p: 13, c: 60, f: 7, portion: [40, '4 yemek kaşığı'] },
+  { name: 'Yulaf ezmesi (kuru)', kcal: 375, p: 13, c: 60, f: 7, portion: [40, '4 yemek kaşığı'], density: 0.4 },
   { name: 'Patates (haşlanmış)', kcal: 87, p: 1.9, c: 20, f: 0.1, portion: [150, '1 orta boy'] },
   { name: 'Patates kızartması', kcal: 312, p: 3.4, c: 41, f: 15, portion: [150, '1 porsiyon'] },
-  { name: 'Mısır gevreği', kcal: 380, p: 7, c: 84, f: 1, portion: [30, '1 kase'] },
+  { name: 'Mısır gevreği', kcal: 380, p: 7, c: 84, f: 1, portion: [30, '1 kase'], density: 0.15 },
   // Et, tavuk, balık, yumurta
   { name: 'Tavuk göğsü (ızgara)', kcal: 165, p: 31, c: 0, f: 3.6, portion: [150, '1 porsiyon'] },
   { name: 'Tavuk but (derisiz)', kcal: 185, p: 26, c: 0, f: 8.5, portion: [120, '1 adet'] },
@@ -32,18 +36,20 @@ export const FOODS: Food[] = [
   { name: 'Menemen', kcal: 120, p: 6, c: 5, f: 8, portion: [250, '1 porsiyon'] },
   { name: 'Omlet (2 yumurta)', kcal: 160, p: 11, c: 1, f: 12, portion: [120, '1 porsiyon'] },
   // Süt ürünleri
+  { name: 'Pınar Protein Süt (sade, laktozsuz)', kcal: 43, p: 5.2, c: 4.9, f: 0.3, portion: [500, '1 şişe (500 ml)'], tags: 'pinar protein sut' },
+  { name: 'Pınar Protein Pro+ Vanilya', kcal: 48, p: 5.2, c: 6.1, f: 0.3, portion: [500, '1 şişe (500 ml)'], tags: 'pinar protein sut' },
   { name: 'Süt (yarım yağlı)', kcal: 47, p: 3.3, c: 4.8, f: 1.6, portion: [200, '1 bardak'] },
   { name: 'Süt (tam yağlı)', kcal: 61, p: 3.2, c: 4.7, f: 3.3, portion: [200, '1 bardak'] },
   { name: 'Yoğurt (tam yağlı)', kcal: 61, p: 3.5, c: 4.7, f: 3.3, portion: [200, '1 kase'] },
   { name: 'Yoğurt (yağsız)', kcal: 40, p: 4, c: 5, f: 0.2, portion: [200, '1 kase'] },
-  { name: 'Süzme yoğurt', kcal: 97, p: 9, c: 4, f: 5, portion: [150, '1 kase'] },
+  { name: 'Süzme yoğurt', kcal: 97, p: 9, c: 4, f: 5, portion: [150, '1 kase'], density: 1.1 },
   { name: 'Ayran', kcal: 36, p: 1.7, c: 2.6, f: 1.8, portion: [250, '1 bardak'] },
   { name: 'Kefir', kcal: 55, p: 3.3, c: 4.5, f: 2.5, portion: [200, '1 bardak'] },
   { name: 'Beyaz peynir (tam yağlı)', kcal: 265, p: 17, c: 1, f: 21, portion: [30, '1 dilim'] },
   { name: 'Beyaz peynir (yarım yağlı)', kcal: 185, p: 18, c: 2, f: 12, portion: [30, '1 dilim'] },
   { name: 'Kaşar peyniri', kcal: 350, p: 25, c: 1, f: 27, portion: [20, '1 dilim'] },
-  { name: 'Lor peyniri', kcal: 100, p: 12, c: 3, f: 4, portion: [50, '2 yemek kaşığı'] },
-  { name: 'Tereyağı', kcal: 717, p: 0.9, c: 0.1, f: 81, portion: [10, '1 tatlı kaşığı'] },
+  { name: 'Lor peyniri', kcal: 100, p: 12, c: 3, f: 4, portion: [50, '2 yemek kaşığı'], density: 0.7 },
+  { name: 'Tereyağı', kcal: 717, p: 0.9, c: 0.1, f: 81, portion: [10, '1 tatlı kaşığı'], density: 0.95 },
   // Bakliyat & sebze yemekleri
   { name: 'Mercimek çorbası', kcal: 60, p: 3.5, c: 9, f: 1.2, portion: [250, '1 kase'] },
   { name: 'Ezogelin çorbası', kcal: 65, p: 3, c: 10, f: 1.5, portion: [250, '1 kase'] },
@@ -95,12 +101,12 @@ export const FOODS: Food[] = [
   { name: 'Badem', kcal: 579, p: 21, c: 22, f: 50, portion: [30, '1 avuç'] },
   { name: 'Ceviz', kcal: 654, p: 15, c: 14, f: 65, portion: [30, '1 avuç'] },
   { name: 'Fındık', kcal: 628, p: 15, c: 17, f: 61, portion: [30, '1 avuç'] },
-  { name: 'Fıstık ezmesi', kcal: 588, p: 25, c: 20, f: 50, portion: [20, '1 yemek kaşığı'] },
+  { name: 'Fıstık ezmesi', kcal: 588, p: 25, c: 20, f: 50, portion: [20, '1 yemek kaşığı'], density: 1.07 },
   { name: 'Zeytin', kcal: 115, p: 0.8, c: 6, f: 11, portion: [20, '5 adet'] },
-  { name: 'Zeytinyağı', kcal: 884, p: 0, c: 0, f: 100, portion: [10, '1 yemek kaşığı'] },
-  { name: 'Bal', kcal: 304, p: 0.3, c: 82, f: 0, portion: [20, '1 yemek kaşığı'] },
-  { name: 'Reçel', kcal: 250, p: 0.3, c: 62, f: 0.1, portion: [20, '1 yemek kaşığı'] },
-  { name: 'Tahin-pekmez', kcal: 450, p: 10, c: 50, f: 25, portion: [40, '2 yemek kaşığı'] },
+  { name: 'Zeytinyağı', kcal: 884, p: 0, c: 0, f: 100, portion: [10, '1 yemek kaşığı'], density: 0.92 },
+  { name: 'Bal', kcal: 304, p: 0.3, c: 82, f: 0, portion: [20, '1 yemek kaşığı'], density: 1.42 },
+  { name: 'Reçel', kcal: 250, p: 0.3, c: 62, f: 0.1, portion: [20, '1 yemek kaşığı'], density: 1.3 },
+  { name: 'Tahin-pekmez', kcal: 450, p: 10, c: 50, f: 25, portion: [40, '2 yemek kaşığı'], density: 1.2 },
   // Tatlı & atıştırmalık
   { name: 'Baklava', kcal: 430, p: 7, c: 50, f: 23, portion: [40, '1 dilim'] },
   { name: 'Sütlaç', kcal: 130, p: 3.5, c: 22, f: 3, portion: [200, '1 kase'] },
@@ -109,7 +115,7 @@ export const FOODS: Food[] = [
   { name: 'Cips', kcal: 536, p: 7, c: 53, f: 34, portion: [40, '1 küçük paket'] },
   { name: 'Dondurma', kcal: 207, p: 3.5, c: 24, f: 11, portion: [100, '2 top'] },
   { name: 'Kurabiye', kcal: 490, p: 6, c: 62, f: 24, portion: [25, '1 adet'] },
-  { name: 'Protein tozu (whey)', kcal: 400, p: 78, c: 8, f: 6, portion: [30, '1 ölçek'] },
+  { name: 'Protein tozu (whey)', kcal: 400, p: 78, c: 8, f: 6, portion: [30, '1 ölçek'], density: 0.45 },
   { name: 'Protein bar', kcal: 380, p: 32, c: 35, f: 12, portion: [60, '1 adet'] },
   // İçecekler
   { name: 'Çay (şekersiz)', kcal: 1, p: 0, c: 0.2, f: 0, portion: [200, '1 bardak'] },
@@ -133,25 +139,45 @@ export function searchFoods(q: string, extra: Food[] = []): Food[] {
   const n = normalizeTr(q.trim())
   if (!n) return []
   const all = [...extra, ...FOODS]
+  const words = n.split(/\s+/)
+  const hay = (f: Food) => normalizeTr(`${f.name} ${f.tags ?? ''}`)
   const starts = all.filter((f) => normalizeTr(f.name).startsWith(n))
-  const incl = all.filter((f) => !starts.includes(f) && normalizeTr(f.name).includes(n))
+  const incl = all.filter((f) => !starts.includes(f) && words.every((w) => hay(f).includes(w)))
   return [...starts, ...incl].slice(0, 25)
 }
 
 export interface OffProduct { name: string; brand?: string; kcal: number; p: number; c: number; f: number; serving?: number }
 
+function parseOff(pr: any): OffProduct | null {
+  const n = pr.nutriments ?? {}
+  const kcal = n['energy-kcal_100g'] ?? (n['energy_100g'] ? n['energy_100g'] / 4.184 : undefined)
+  const name = pr.product_name_tr || pr.product_name
+  if (!name || kcal === undefined) return null
+  const brand = Array.isArray(pr.brands) ? pr.brands.map((b: string) => b.replace(/^xx:/, '')).join(', ') : pr.brands
+  return { name, brand, kcal: Math.round(kcal), p: +(n.proteins_100g ?? 0), c: +(n.carbohydrates_100g ?? 0), f: +(n.fat_100g ?? 0), serving: pr.serving_quantity ? +pr.serving_quantity : undefined }
+}
+
+const FIELDS = 'code,product_name,product_name_tr,brands,nutriments,serving_quantity'
+
+// Open Food Facts'in yeni arama servisi (search-a-licious). Türkçe harfli yazım bazen eşleşmiyor
+// ("pınar" ≠ "pinar"), o yüzden iki yazımla da arayıp birleştiriyoruz. Eski search.pl sık sık 503 veriyor.
 export async function searchOpenFoodFacts(q: string): Promise<OffProduct[]> {
-  const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=15&fields=product_name,product_name_tr,brands,nutriments,serving_quantity&cc=tr&lc=tr`
-  const r = await fetch(url, { headers: { 'User-Agent': 'Formda/1.0 (iOS)' } })
-  if (!r.ok) throw new Error('OFF ' + r.status)
-  const j = await r.json()
+  const variants = [...new Set([q.trim(), normalizeTr(q.trim())])]
+  const hits = await Promise.all(variants.map(async (v) => {
+    const url = `https://search.openfoodfacts.org/search?q=${encodeURIComponent(v)}&page_size=20&langs=tr,en&fields=${FIELDS}`
+    const r = await fetch(url, { headers: { 'User-Agent': 'Formda/1.0 (iOS)' } })
+    if (!r.ok) throw new Error('OFF ' + r.status)
+    const j = await r.json()
+    return (j.hits ?? []) as any[]
+  }).map((p) => p.catch(() => [] as any[])))
+  const seen = new Set<string>()
   const out: OffProduct[] = []
-  for (const pr of j.products ?? []) {
-    const n = pr.nutriments ?? {}
-    const kcal = n['energy-kcal_100g'] ?? (n['energy_100g'] ? n['energy_100g'] / 4.184 : undefined)
-    const name = pr.product_name_tr || pr.product_name
-    if (!name || kcal === undefined) continue
-    out.push({ name, brand: pr.brands, kcal: Math.round(kcal), p: +(n.proteins_100g ?? 0), c: +(n.carbohydrates_100g ?? 0), f: +(n.fat_100g ?? 0), serving: pr.serving_quantity ? +pr.serving_quantity : undefined })
+  for (const pr of hits.flat()) {
+    const key = pr.code ?? `${pr.product_name}-${pr.brands}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    const x = parseOff(pr)
+    if (x) out.push(x)
   }
   return out
 }
