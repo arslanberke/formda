@@ -68,6 +68,8 @@ release)
   pull_latest
   npm install --no-audit --no-fund
   npx expo prebuild -p ios
+  # prebuild package.json'daki ios/android betiklerini değiştirir; sonraki güncellemeyi engellemesin
+  git checkout -- package.json 2>/dev/null || true
   npx expo run:ios --configuration Release --device "$@"
   publish_update
   exit 0
@@ -80,6 +82,7 @@ renew)
     exit 1
   fi
   npx expo prebuild -p ios
+  git checkout -- package.json 2>/dev/null || true
   cd ios && xcodebuild -workspace Formda.xcworkspace -scheme Formda \
     -configuration Release -destination "id=$udid" \
     -allowProvisioningUpdates build
