@@ -36,6 +36,7 @@
         }
       ],
       "expo-sharing",
+      "./plugins/withoutPushEntitlement",
       "expo-notifications"
     ],
     "experiments": {
