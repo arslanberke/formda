@@ -8,10 +8,10 @@ import Animated, { FadeInDown } from 'react-native-reanimated'
 import { CountUp } from '../../components/motion'
 import { Button, Card, Chip, H2, Muted, P, Row, Screen, Wrap } from '../../components/ui'
 import { applyReminders, WEEKDAYS } from '../../lib/reminders'
-import { EQUIPMENT } from '../../data/exercises'
+import { EQUIPMENT, EXERCISE_MAP } from '../../data/exercises'
 import { useEnergy } from '../../lib/energy'
 import { age } from '../../lib/nutrition'
-import { exportJson, replaceState, resetState, setState, useStore } from '../../lib/store'
+import { exportJson, includeExercise, replaceState, resetState, setState, useStore } from '../../lib/store'
 import { C, F } from '../../lib/theme'
 import type { AppState } from '../../lib/types'
 
@@ -79,6 +79,13 @@ export default function Profil() {
           : `Bakım kalorin şimdilik formülle tahmin. ${m.needDays} gün yemek + 2 haftaya yayılmış 3 tartı kaydından sonra gerçek verine göre kendini düzeltecek (${m.loggedDays}/${m.needDays} gün).`}</Muted>
         <Text style={{ color: C.text, marginTop: 8, fontFamily: F.body, fontSize: 15, lineHeight: 21 }}>Ekipman: {profile.equipment.map((e) => EQUIPMENT.find((q) => q.id === e)?.name).filter(Boolean).join(', ')}</Text>
         {profile.dumbbells.length > 0 && <Muted>Dambıl: {profile.dumbbells.join(', ')} kg</Muted>}
+        {profile.bands?.length ? <Muted>Lastik: {profile.bands.join(', ')} kg</Muted> : null}
+        {profile.excluded?.length ? (
+          <View style={{ marginTop: 10 }}>
+            <Muted style={{ marginBottom: 6 }}>İstemediğin hareketler (dokununca tekrar önerilir):</Muted>
+            <Wrap>{profile.excluded.map((id) => <Chip key={id} label={`${EXERCISE_MAP[id]?.name ?? id}  ✕`} on onPress={() => includeExercise(id)} />)}</Wrap>
+          </View>
+        ) : null}
         <Button title="Profili / ekipmanı düzenle" kind="secondary" style={{ marginTop: 12 }} onPress={() => router.push('/onboarding')} />
         <Button title="Kapasite testini yap / yenile" kind="secondary" style={{ marginTop: 8 }} onPress={() => router.push('/assessment')} />
         <Muted style={{ marginTop: 6 }}>Ekipman değiştirirsen Antrenman sekmesinden «Programı yenile» de.</Muted>

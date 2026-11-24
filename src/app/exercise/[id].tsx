@@ -1,12 +1,12 @@
 import { router, useLocalSearchParams } from 'expo-router'
 import React from 'react'
-import { Pressable, Text, View } from 'react-native'
+import { Alert, Pressable, Text, View } from 'react-native'
 import { Figure } from '../../components/Figure'
-import { Card, H1, TopBar, H2, Muted, P, Screen } from '../../components/ui'
+import { Button, Card, H1, TopBar, H2, Muted, P, Screen } from '../../components/ui'
 import { EQUIPMENT, EXERCISE_MAP, PATTERN_NAMES } from '../../data/exercises'
 import { hasMove } from '../../data/moves'
 import { alternatives } from '../../lib/program'
-import { useStore } from '../../lib/store'
+import { excludeExercise, includeExercise, useStore } from '../../lib/store'
 import { C, F } from '../../lib/theme'
 
 export default function ExerciseDetail() {
@@ -53,6 +53,10 @@ export default function ExerciseDetail() {
           ))}
         </Card>
       )}
+      {profile ? (profile.excluded?.includes(ex.id)
+        ? <Button title="Tekrar önerilsin" kind="secondary" onPress={() => includeExercise(ex.id)} />
+        : <Button title="Bu hareketi istemiyorum" kind="ghost" onPress={() => Alert.alert(`${ex.name} çıkarılsın mı?`, 'Programında varsa yerine aynı bölge için başka bir hareket gelir ve bir daha önerilmez. Ben sekmesinden geri açabilirsin.', [{ text: 'Vazgeç' }, { text: 'Çıkar', style: 'destructive', onPress: () => { excludeExercise(ex.id); router.back() } }])} />
+      ) : null}
     </Screen>
   )
 }

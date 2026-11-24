@@ -10,8 +10,8 @@ import { Sheet } from '../components/Sheet'
 import { Button, Chip, Muted, NumberInput, Row, Screen } from '../components/ui'
 import { EQUIPMENT, EXERCISE_MAP, type Exercise } from '../data/exercises'
 import { hasMove } from '../data/moves'
-import { alternatives, describeSet, progressAfterWorkout, stepLoad, swapPrescription } from '../lib/program'
-import { getState, setState, todayStr, uid, useStore } from '../lib/store'
+import { alternatives, describeBands, describeSet, progressAfterWorkout, stepLoad, swapPrescription } from '../lib/program'
+import { excludeExercise, getState, setState, todayStr, uid, useStore } from '../lib/store'
 import { C, F } from '../lib/theme'
 import type { ExerciseLog, Feel, WorkoutLog } from '../lib/types'
 
@@ -193,7 +193,10 @@ export default function Workout() {
 
         {e.target.weightKg !== undefined && (
           <View style={[st.tile, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }]}>
-            <Text style={st.tileTxt}>Ağırlık{ex.load === 'dumbbell' ? ' (tek dambıl)' : ''}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={st.tileTxt}>{ex.load === 'band' ? 'Lastik' : `Ağırlık${ex.load === 'dumbbell' ? ' (tek dambıl)' : ''}`}</Text>
+              {ex.load === 'band' ? <Text style={[st.sub, { fontSize: 12 }]}>{describeBands(profile, e.target.weightKg)}</Text> : null}
+            </View>
             <Row style={{ alignItems: 'center' }}>
               <Pressable style={st.round} onPress={() => setW(-1)}><Ionicons name="remove" size={18} color={C.text} /></Pressable>
               <Text style={{ color: C.text, fontFamily: F.display, fontSize: 18, minWidth: 76, textAlign: 'center' }}>{e.target.weightKg} kg</Text>
@@ -260,6 +263,13 @@ export default function Workout() {
             </Pressable>
           ))}
         </ScrollView>
+        <Button title="Bu hareketi hiç önerme" kind="ghost" style={{ marginTop: 10 }} onPress={() => {
+          const old = ex.id
+          Alert.alert(`${ex.name} çıkarılsın mı?`, alts.length ? `Yerine ${alts[0].name} gelecek ve bir daha önerilmeyecek. Ben sekmesinden geri açabilirsin.` : 'Bir daha önerilmeyecek. Ben sekmesinden geri açabilirsin.', [
+            { text: 'Vazgeç' },
+            { text: 'Çıkar', style: 'destructive', onPress: () => { if (alts.length) doSwap(alts[0]); else setSwapOpen(false); excludeExercise(old) } },
+          ])
+        }} />
       </Sheet>
 
       <Sheet visible={askFeel} onClose={() => setAskFeel(false)}>

@@ -100,12 +100,38 @@ export const LEVEL_NAMES = ['Başlangıç', 'Yeni', 'Orta', 'İleri']
 // ---------- Ağırlık artışları ----------
 function sortedUniq(a: number[]) { return [...new Set(a.filter((x) => x > 0))].sort((x, y) => x - y) }
 
+export const usable = (e: Exercise, p: Profile) => hasEquipment(e, p.equipment) && !p.excluded?.includes(e.id)
+
+export function bandName(kg: number) {
+  return kg <= 4 ? 'Çok hafif' : kg <= 7 ? 'Hafif' : kg <= 12 ? 'Orta' : kg <= 18 ? 'Ağır' : kg <= 25 ? 'Çok ağır' : 'Ekstra ağır'
+}
+
+// lastikler üst üste takılınca direnç toplanır: her alt küme bir kademe
+function bandCombos(bands: number[]) {
+  const best = new Map<number, number[]>()
+  const b = bands.filter((x) => x > 0).slice(0, 6)
+  for (let m = 1; m < 1 << b.length; m++) {
+    const pick = b.filter((_, i) => m & (1 << i))
+    const sum = Math.round(pick.reduce((a, x) => a + x, 0) * 10) / 10
+    if (!best.has(sum) || best.get(sum)!.length > pick.length) best.set(sum, pick)
+  }
+  return best
+}
+
+// "Orta (10 kg) + Hafif (5 kg)" gibi: hangi lastik(ler)i takacağını söyler
+export function describeBands(p: Profile, kg: number) {
+  const pick = bandCombos(p.bands ?? []).get(kg)
+  if (!pick) return `${kg} kg lastik`
+  return pick.sort((a, b) => b - a).map((x) => `${bandName(x)} (${x} kg)`).join(' + ')
+}
+
 export function availableLoads(p: Profile, ex: Exercise): number[] | null {
   if (ex.load === 'dumbbell' || ex.load === 'dumbbell1') {
     const d = sortedUniq(p.dumbbells)
     return d.length ? d : null
   }
   if (ex.load === 'kettlebell') { const d = sortedUniq(p.kettlebells); return d.length ? d : null }
+  if (ex.load === 'band') { const d = [...bandCombos(p.bands ?? []).keys()].sort((a, b) => a - b); return d.length ? d : null }
   if (ex.load === 'barbell') {
     const plates = sortedUniq(p.plates)
     if (!plates.length) return null
@@ -149,7 +175,7 @@ function roundToLoad(p: Profile, ex: Exercise, target: number): number {
 const TARGET_TIER: Record<Level, number> = { 0: 1, 1: 2, 2: 3, 3: 4 }
 
 function candidates(p: Profile, pattern: Pattern): Exercise[] {
-  return EXERCISES.filter((e) => e.pattern === pattern && hasEquipment(e, p.equipment))
+  return EXERCISES.filter((e) => e.pattern === pattern && usable(e, p))
 }
 
 export function pickExercise(p: Profile, pattern: Pattern, level: Level, exclude: string[] = []): Exercise | null {
@@ -164,7 +190,12 @@ export function pickExercise(p: Profile, pattern: Pattern, level: Level, exclude
 
 function startWeight(p: Profile, ex: Exercise, a: Assessment, weightKg: number): number | undefined {
   if (ex.load === 'bw') return undefined
-  if (ex.load === 'band') return undefined
+  if (ex.load === 'band') {
+    const loads = availableLoads(p, ex)
+    if (!loads) return undefined
+    const lv = a.levels[ex.pattern] ?? 0
+    return loads[Math.min(loads.length - 1, Math.round((lv / 3) * (loads.length - 1) * 0.5))]
+  }
   const rm = a.oneRm[ex.pattern]
   let target: number
   if (rm) {
@@ -227,7 +258,7 @@ export function generateProgram(p: Profile, a: Assessment, weightKg: number): Pr
       // testte 6+ tekrar yapabildiği şınav çeşidiyle başla
       if (!alt && pt === 'push' && a.variants?.push && (a.results.push ?? 0) >= 6) {
         const tested = EXERCISE_MAP[a.variants.push]
-        if (tested && hasEquipment(tested, p.equipment) && !today.includes(tested.id)) ex = tested
+        if (tested && usable(tested, p) && !today.includes(tested.id)) ex = tested
       }
       if (!ex) continue
       used.push(ex.id); today.push(ex.id)
@@ -281,7 +312,7 @@ export function progressAfterWorkout(p: Profile, target: Prescription, sets: Set
       } else { next.reps = hi; message = 'Daha ağır ekipman yok; set sayısını artırmayı düşün.' }
     } else {
       // vücut ağırlığı: bir üst basamağa geç
-      const harder = EXERCISES.filter((e) => e.pattern === ex.pattern && e.tier > ex.tier && hasEquipment(e, p.equipment)).sort((a, b) => a.tier - b.tier)[0]
+      const harder = EXERCISES.filter((e) => e.pattern === ex.pattern && e.tier > ex.tier && usable(e, p)).sort((a, b) => a.tier - b.tier)[0]
       if (harder) {
         next = { ...target, exerciseId: harder.id, reps: harder.repRange[0], weightKg: startWeightForSwap(p, harder, target) }
         message = `Tebrikler! ${ex.name} → ${harder.name} hareketine geçtin.`
@@ -298,7 +329,7 @@ export function progressAfterWorkout(p: Profile, target: Prescription, sets: Set
         next.weightKg = w; message = `İki kez zorlandın; ağırlık ${target.weightKg} → ${w} kg düştü. Normal, böyle de ilerlenir.`
       } else if (target.reps - step >= lo) { next.reps = target.reps - step; message = `Hedef ${next.reps} oldu; tekrar toparlayınca artar.` }
       else {
-        const easier = EXERCISES.filter((e) => e.pattern === ex.pattern && e.tier < ex.tier && hasEquipment(e, p.equipment)).sort((a, b) => b.tier - a.tier)[0]
+        const easier = EXERCISES.filter((e) => e.pattern === ex.pattern && e.tier < ex.tier && usable(e, p)).sort((a, b) => b.tier - a.tier)[0]
         if (easier) { next = { ...target, exerciseId: easier.id, reps: easier.repRange[1] }; message = `${easier.name} ile sağlamlaştırıp geri döneriz.` }
       }
     } else message = 'Zor geldi, not aldım. Bir dahaki sefere aynı hedef; yine zorlanırsan hafifleteceğim.'
@@ -308,8 +339,9 @@ export function progressAfterWorkout(p: Profile, target: Prescription, sets: Set
 }
 
 function startWeightForSwap(p: Profile, harder: Exercise, prev: Prescription): number | undefined {
-  if (harder.load === 'bw' || harder.load === 'band') return undefined
+  if (harder.load === 'bw') return undefined
   const loads = availableLoads(p, harder)
+  if (harder.load === 'band') return loads?.[0]
   if (loads && loads.length) return loads[Math.min(1, loads.length - 1)]
   return prev.weightKg ?? (harder.load === 'barbell' ? p.barWeight || 20 : 4)
 }
@@ -317,7 +349,7 @@ function startWeightForSwap(p: Profile, harder: Exercise, prev: Prescription): n
 export function describeSet(pres: Prescription): string {
   const ex = EXERCISE_MAP[pres.exerciseId]
   const side = ex.perSide ? ' (her taraf)' : ''
-  const w = pres.weightKg !== undefined ? ` × ${pres.weightKg} kg` : ''
+  const w = pres.weightKg !== undefined ? (ex.load === 'band' ? ` · ${pres.weightKg} kg lastik` : ` × ${pres.weightKg} kg`) : ''
   if (ex.unit === 'sec' && pres.reps >= 120) return `${Math.round(pres.reps / 60)} dk${w}`
   const unit = ex.unit === 'sec' ? 'sn' : 'tekrar'
   return `${pres.sets} set × ${pres.reps} ${unit}${side}${w}`
@@ -326,7 +358,7 @@ export function describeSet(pres: Prescription): string {
 export function alternatives(p: Profile, exerciseId: string): Exercise[] {
   const ex = EXERCISE_MAP[exerciseId]
   if (!ex) return []
-  return EXERCISES.filter((e) => e.pattern === ex.pattern && e.id !== ex.id && hasEquipment(e, p.equipment)).sort((a, b) => a.tier - b.tier)
+  return EXERCISES.filter((e) => e.pattern === ex.pattern && e.id !== ex.id && usable(e, p)).sort((a, b) => a.tier - b.tier)
 }
 
 export function swapPrescription(p: Profile, a: Assessment | null, ex: Exercise, prev: Prescription, weightKg: number): Prescription {
@@ -335,4 +367,22 @@ export function swapPrescription(p: Profile, a: Assessment | null, ex: Exercise,
     return { ...fresh, sets: prev.sets }
   }
   return { ...prev, exerciseId: ex.id, reps: ex.repRange[0], weightKg: startWeightForSwap(p, ex, prev) }
+}
+
+// Hareketi kalıcı olarak programdan çıkar; her geçtiği yere aynı bölge için başka bir hareket koy
+export function excludeFromProgram(p: Profile, a: Assessment | null, prog: Program | null, id: string, weightKg: number): { profile: Profile; program: Program | null } {
+  const profile = { ...p, excluded: [...new Set([...(p.excluded ?? []), id])] }
+  if (!prog) return { profile, program: prog }
+  const ex = EXERCISE_MAP[id]
+  const days = prog.days.map((d) => {
+    const ids = d.items.map((i) => i.exerciseId)
+    const items = d.items.flatMap((it) => {
+      if (it.exerciseId !== id) return [it]
+      const lv = a?.levels[ex.pattern] ?? 0
+      const nx = pickExercise(profile, ex.pattern, lv, ids) ?? pickExercise(profile, ex.pattern, lv)
+      return nx ? [swapPrescription(profile, a, nx, it, weightKg)] : []
+    })
+    return { ...d, items }
+  })
+  return { profile, program: { ...prog, days } }
 }

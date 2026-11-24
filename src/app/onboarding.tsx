@@ -11,6 +11,8 @@ import type { Activity, EquipmentId, Goal, Profile, Sex } from '../lib/types'
 const DB_PRESETS = [2, 3, 4, 5, 6, 7.5, 8, 10, 12, 12.5, 14, 15, 16, 17.5, 20, 22.5, 25, 30]
 const KB_PRESETS = [4, 6, 8, 10, 12, 16, 20, 24, 28, 32]
 const PLATE_PRESETS = [1.25, 2.5, 5, 10, 15, 20, 25]
+// Renkler markaya göre değişir; üstünde kg/lb yazmıyorsa kabaca bu seviyeler (lb aralığının ortası ≈ kg × 2.2)
+const BAND_PRESETS: [string, number][] = [['Çok hafif', 3], ['Hafif', 5], ['Orta', 10], ['Ağır', 15], ['Çok ağır', 22], ['Ekstra ağır', 30]]
 
 export default function Onboarding() {
   const existing = useStore((s) => s.profile)
@@ -28,6 +30,8 @@ export default function Onboarding() {
   const [dumbbells, setDumbbells] = useState<number[]>(existing?.dumbbells ?? [])
   const [kettlebells, setKettlebells] = useState<number[]>(existing?.kettlebells ?? [])
   const [plates, setPlates] = useState<number[]>(existing?.plates ?? [])
+  const [bands, setBands] = useState<number[]>(existing?.bands ?? [])
+  const [customBand, setCustomBand] = useState<number | undefined>()
   const [barWeight, setBarWeight] = useState<number | undefined>(existing?.barWeight ?? 20)
   const [customDb, setCustomDb] = useState<number | undefined>()
 
@@ -40,6 +44,7 @@ export default function Onboarding() {
       if (!heightCm || heightCm < 120 || heightCm > 230) return Alert.alert('Boyunu cm olarak gir (ör. 178)')
       if (!weightKg || weightKg < 30 || weightKg > 300) return Alert.alert('Kilonu kg olarak gir (ör. 82)')
     }
+    if (step === 2 && eq.includes('band') && bands.length === 0) return Alert.alert('Hangi lastiklerin var?', 'Her lastik için bir kez dokun; ona göre hangisini takacağını söyleyeceğim.')
     if (step === 2 && eq.includes('dumbbell') && dumbbells.length === 0) return Alert.alert('Hangi dambıl ağırlıkların var?', 'En az birini seç; ona göre ağırlık önereceğim.')
     if (step < 3) setStep(step + 1)
     else finish()
@@ -49,6 +54,7 @@ export default function Onboarding() {
     const profile: Profile = {
       name: name.trim() || 'Sporcu', sex, birthYear: birthYear!, heightCm: heightCm!, goal, activity, daysPerWeek: days,
       equipment: eq.length ? eq : ['bodyweight'], dumbbells, kettlebells, plates, barWeight: barWeight ?? 20,
+      bands: eq.includes('band') ? bands : [], excluded: existing?.excluded,
       createdAt: existing?.createdAt ?? new Date().toISOString(),
     }
     setState((s) => {
@@ -134,6 +140,21 @@ export default function Onboarding() {
                 <Button small title="Ekle" kind="secondary" onPress={() => { if (customDb) { toggleNum(dumbbells, setDumbbells, customDb); setCustomDb(undefined) } }} />
               </Row>
               {dumbbells.length > 0 && <Muted>Seçili: {dumbbells.join(', ')} kg</Muted>}
+            </Card>
+          )}
+          {eq.includes('band') && (
+            <Card style={{ marginTop: 16 }}>
+              <H2>Direnç lastiklerin</H2>
+              <Muted style={{ marginBottom: 8 }}>Her lastik için bir kez dokun (aynısından 2 tane varsa 2 kez). Üstünde kg yazıyorsa onu gir; aralık yazıyorsa (ör. 7-16 kg) ortasını, lb yazıyorsa 2.2&apos;ye böl.</Muted>
+              <Wrap>{BAND_PRESETS.map(([l, w]) => <Chip key={l} label={`+ ${l} ~${w} kg`} on={false} onPress={() => setBands([...bands, w].sort((a, b) => a - b))} />)}</Wrap>
+              <Row style={{ marginTop: 10 }}>
+                <View style={{ flex: 1 }}><NumberInput value={customBand} onChange={setCustomBand} placeholder="Üstünde yazan kg" suffix="kg" /></View>
+                <Button small title="Ekle" kind="secondary" onPress={() => { if (customBand) { setBands([...bands, customBand].sort((a, b) => a - b)); setCustomBand(undefined) } }} />
+              </Row>
+              {bands.length > 0 && (
+                <Wrap>{bands.map((w, i) => <Chip key={`${w}-${i}`} label={`${w} kg  ✕`} on onPress={() => setBands(bands.filter((_, j) => j !== i))} />)}</Wrap>
+              )}
+              {bands.length > 1 && <Muted style={{ marginTop: 6 }}>Lastikleri birlikte takınca direnç toplanır; ağır hareketlerde ikisini birden önereceğim.</Muted>}
             </Card>
           )}
           {eq.includes('kettlebell') && (

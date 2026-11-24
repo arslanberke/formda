@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useSyncExternalStore } from 'react'
 import type { AppState } from './types'
+import { excludeFromProgram } from './program'
 
 const KEY = 'formda:v1'
 
@@ -99,3 +100,15 @@ export function addDays(dateStr: string, n: number) {
 }
 
 export function exportJson(): string { return JSON.stringify(state) }
+
+export function excludeExercise(id: string) {
+  setState((s) => {
+    if (!s.profile) return {}
+    const { profile, program } = excludeFromProgram(s.profile, s.assessment, s.program, id, s.body[s.body.length - 1]?.weightKg ?? 75)
+    return { profile, program }
+  })
+}
+
+export function includeExercise(id: string) {
+  setState((s) => (s.profile ? { profile: { ...s.profile, excluded: (s.profile.excluded ?? []).filter((x) => x !== id) } } : {}))
+}

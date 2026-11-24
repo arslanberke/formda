@@ -20,6 +20,8 @@ export interface Profile {
   kettlebells: number[]
   barWeight: number
   plates: number[]      // mevcut plakalar (tek taraf toplamı değil, tüm plaka listesi)
+  bands?: number[]      // her lastiğin yaklaşık direnci (kg); aynısından 2 tane varsa 2 kez
+  excluded?: string[]   // kullanıcının istemediği hareketler, önerilmez
   createdAt: string
   setupPending?: boolean // kayıt atlandı, varsayılan değerlerle çalışıyor
 }
