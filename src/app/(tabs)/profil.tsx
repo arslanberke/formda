@@ -13,6 +13,7 @@ import { useEnergy } from '../../lib/energy'
 import { age } from '../../lib/nutrition'
 import { exportJson, includeExercise, replaceState, resetState, setState, useStore } from '../../lib/store'
 import { C, F } from '../../lib/theme'
+import { versionLabel } from '../../lib/version'
 import type { AppState } from '../../lib/types'
 
 const GOALS = { lose: 'Kilo vermek', maintain: 'Formda kalmak', gain: 'Kas yapmak' }
@@ -116,7 +117,7 @@ export default function Profil() {
         <H2>Tehlikeli bölge</H2>
         <Button title="Tüm verileri sil" kind="danger" onPress={doReset} />
       </Card>
-      <Muted style={{ textAlign: 'center' }}>Formda v1.0</Muted>
+      <Muted style={{ textAlign: 'center' }}>{versionLabel()}</Muted>
     </Screen>
   )
 }

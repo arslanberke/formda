@@ -58,7 +58,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "eslint src",
-    "publish": "eas update --branch production --environment production --non-interactive --message \"update\"",
+    "publish": "./scripts/publish.sh",
     "release:phone": "./scripts/phone.sh release",
     "renew:phone": "./scripts/phone.sh renew"
   },
