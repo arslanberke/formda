@@ -2,7 +2,8 @@ import { router } from 'expo-router'
 import React, { useState } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native'
-import Animated, { FadeInDown } from 'react-native-reanimated'
+import Animated, { FadeInDown, FadeOut } from 'react-native-reanimated'
+import { SwipeDelete } from '../../components/SwipeDelete'
 import { CountUp, Ring } from '../../components/motion'
 import { Muted, Screen } from '../../components/ui'
 import { useEnergy } from '../../lib/energy'
@@ -96,18 +97,22 @@ export default function Beslenme() {
               </Pressable>
             </View>
             {items.map((f) => (
-              <Pressable key={f.id} onLongPress={() => Alert.alert('Sil?', f.name, [{ text: 'Vazgeç' }, { text: 'Sil', style: 'destructive', onPress: () => setState((s) => ({ foods: s.foods.filter((x) => x.id !== f.id) })) }])} style={{ paddingVertical: 10, marginTop: 10, borderTopWidth: 1, borderTopColor: C.border }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={g.food} numberOfLines={1}>{f.name}</Text>
-                  <Text style={g.foodK}>{Math.round(f.kcal)}</Text>
-                </View>
-                <Text style={g.macroT}>{f.grams} g · P {Math.round(f.protein)} · K {Math.round(f.carbs)} · Y {Math.round(f.fat)}</Text>
-              </Pressable>
+              <Animated.View key={f.id} exiting={FadeOut.duration(180)} style={{ marginTop: 10, borderTopWidth: 1, borderTopColor: C.border, paddingTop: 4 }}>
+                <SwipeDelete onDelete={() => setState((s) => ({ foods: s.foods.filter((x) => x.id !== f.id) }))}>
+                  <Pressable onLongPress={() => Alert.alert('Sil?', f.name, [{ text: 'Vazgeç' }, { text: 'Sil', style: 'destructive', onPress: () => setState((s) => ({ foods: s.foods.filter((x) => x.id !== f.id) })) }])} style={{ paddingVertical: 8, backgroundColor: C.solid }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      <Text style={g.food} numberOfLines={1}>{f.name}</Text>
+                      <Text style={g.foodK}>{Math.round(f.kcal)}</Text>
+                    </View>
+                    <Text style={g.macroT}>{f.grams} g · P {Math.round(f.protein)} · K {Math.round(f.carbs)} · Y {Math.round(f.fat)}</Text>
+                  </Pressable>
+                </SwipeDelete>
+              </Animated.View>
             ))}
           </Animated.View>
         )
       })}
-      <Muted style={{ textAlign: 'center' }}>Silmek için bir yiyeceğe basılı tut.</Muted>
+      <Muted style={{ textAlign: 'center' }}>Silmek için yiyeceği sola kaydır.</Muted>
     </Screen>
   )
 }
