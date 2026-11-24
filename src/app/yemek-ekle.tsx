@@ -214,7 +214,7 @@ export default function FoodAdd() {
     const mix = MIXES.find((m) => m.name === recipe.mix)
     const have = new Set(recipe.items.map((x) => x.name))
     const short = (n: string) => n.replace(/ \(.*\)$/, '')
-    const stepOf = (x: Item) => (x.unit === 'g' ? 10 : x.unit === 'ml' ? 50 : x.uG < 10 ? 1 : 0.5)
+    const stepOf = (x: Item) => (x.unit === 'g' ? 10 : x.unit === 'ml' ? 50 : x.uG < 10 || x.unit === 'portion' || x.label === 'adet' ? 1 : 0.5)
     return (
       <Screen padBottom={40}>
         <TopBar left={{ label: 'Vazgeç', onPress: () => setRecipe(null) }} />

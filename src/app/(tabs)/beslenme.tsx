@@ -7,7 +7,7 @@ import { SwipeDelete } from '../../components/SwipeDelete'
 import { CountUp, Ring } from '../../components/motion'
 import { Muted, Screen } from '../../components/ui'
 import { useEnergy } from '../../lib/energy'
-import { addDays, setState, todayStr, useStore } from '../../lib/store'
+import { addDays, setState, todayStr, uid, useStore } from '../../lib/store'
 import { C, F } from '../../lib/theme'
 import type { Meal } from '../../lib/types'
 
@@ -85,6 +85,10 @@ export default function Beslenme() {
       {MEALS.map((m, k) => {
         const items = day.filter((f) => f.meal === m.id)
         const mk = Math.round(items.reduce((a, f) => a + f.kcal, 0))
+        const lastDate = items.length ? undefined : foods.reduce<string | undefined>((b, f) => (f.meal === m.id && f.date < date && f.date >= addDays(date, -14) && (!b || f.date > b) ? f.date : b), undefined)
+        const last = lastDate ? foods.filter((f) => f.meal === m.id && f.date === lastDate) : []
+        const lastK = Math.round(last.reduce((a, f) => a + f.kcal, 0))
+        const repeat = () => setState((s) => ({ foods: [...s.foods, ...last.map((f) => ({ ...f, id: uid(), date }))] }))
         return (
           <Animated.View entering={enter(4 + k)} key={m.id} style={g.card}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -96,6 +100,15 @@ export default function Beslenme() {
                 <Ionicons name="add" size={22} color={C.onAccent} />
               </Pressable>
             </View>
+            {last.length > 0 && (
+              <Pressable accessibilityLabel={`${m.name} tekrarla`} onPress={repeat} style={g.repeat}>
+                <Ionicons name="repeat" size={16} color={C.accent} />
+                <View style={{ flex: 1 }}>
+                  <Text style={g.repeatT}>{lastDate === addDays(date, -1) ? 'Dünküyle aynısını ekle' : `${lastDate!.slice(8, 10)}.${lastDate!.slice(5, 7)} ile aynısını ekle`}</Text>
+                  <Text style={g.macroT} numberOfLines={1}>{last.map((f) => f.name).join(', ')} · {lastK} kcal</Text>
+                </View>
+              </Pressable>
+            )}
             {items.map((f) => (
               <Animated.View key={f.id} exiting={FadeOut.duration(180)} style={{ marginTop: 10, borderTopWidth: 1, borderTopColor: C.border, paddingTop: 4 }}>
                 <SwipeDelete onDelete={() => setState((s) => ({ foods: s.foods.filter((x) => x.id !== f.id) }))}>
@@ -131,5 +144,7 @@ const g = StyleSheet.create({
   midUnit: { color: C.muted, fontFamily: F.body, fontSize: 14, letterSpacing: 0 },
   meal: { color: C.text, fontFamily: F.display, fontSize: 17, letterSpacing: -0.6 },
   food: { color: C.text, fontFamily: F.body, fontSize: 15, flex: 1, marginRight: 8 },
+  repeat: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 14, borderWidth: 1, borderColor: C.border, borderStyle: 'dashed' },
+  repeatT: { color: C.accent, fontFamily: F.medium, fontSize: 14 },
   foodK: { color: C.text, fontFamily: F.display, fontSize: 15 },
 })

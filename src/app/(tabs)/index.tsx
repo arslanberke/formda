@@ -10,8 +10,9 @@ import { EXERCISE_MAP } from '../../data/exercises'
 import { hasMove } from '../../data/moves'
 import { useEnergy } from '../../lib/energy'
 import { describeSet } from '../../lib/program'
-import { addDays, todayStr, useStore } from '../../lib/store'
+import { addDays, getState, todayStr, useStore } from '../../lib/store'
 import { C, F } from '../../lib/theme'
+import { weekly } from '../../lib/weekly'
 import type { ProgramDay } from '../../lib/types'
 
 const DAYS = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi']
@@ -56,6 +57,7 @@ export default function Home() {
   const totalSets = nextDay?.items.reduce((a, it) => a + it.sets, 0) ?? 0
   const start = () => (active ? router.push('/workout') : router.push({ pathname: '/workout', params: { day: String(nextDayIndex) } }))
   const prev = body.length > 1 ? body[body.length - 2] : null
+  const wk = weekly(getState(), profile, tg, today)
   const wDiff = prev ? +(weightKg - prev.weightKg).toFixed(1) : null
 
   return (
@@ -206,6 +208,26 @@ export default function Home() {
           <Text style={[s.idx, { marginTop: 4 }]}>{body[body.length - 1]?.date === today ? 'bugün tartıldın' : 'bugün tartılmadın'}</Text>
         </Pressable>
       </Animated.View>
+
+      {wk ? (
+        <Animated.View entering={enter(8)} style={s.card}>
+          <Text style={s.kicker}>SON 7 GÜN</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
+            {([
+              [wk.loggedDays ? String(wk.avgKcal) : '—', 'ort. kcal'],
+              [wk.loggedDays ? `${wk.avgProtein} g` : '—', 'ort. protein'],
+              [`${wk.workouts}/${profile.daysPerWeek}`, 'antrenman'],
+              [wk.weightDelta == null ? '—' : `${wk.weightDelta > 0 ? '+' : ''}${wk.weightDelta}`, 'kg değişim'],
+            ] as const).map(([v, l]) => (
+              <View key={l}>
+                <Text style={s.weekV}>{v}</Text>
+                <Text style={[s.idx, { marginTop: 2 }]}>{l}</Text>
+              </View>
+            ))}
+          </View>
+          <Text style={[s.item, { marginTop: 14, fontSize: 14, lineHeight: 20, color: C.accent }]}>{wk.tip}</Text>
+        </Animated.View>
+      ) : null}
     </Screen>
   )
 }
@@ -229,6 +251,7 @@ const s = StyleSheet.create({
   ringLbl: { color: C.dim, fontFamily: F.body, fontSize: 10 },
   macroL: { color: C.muted, fontFamily: F.body, fontSize: 13 },
   macroV: { color: C.text, fontFamily: F.medium, fontSize: 13 },
+  weekV: { color: C.text, fontFamily: F.display, fontSize: 18, letterSpacing: -0.6 },
   mid: { color: C.text, fontFamily: F.display, fontSize: 34, letterSpacing: -1.5, marginTop: 6 },
   midUnit: { color: C.muted, fontFamily: F.body, fontSize: 14, marginLeft: 4, marginBottom: 7 },
 })

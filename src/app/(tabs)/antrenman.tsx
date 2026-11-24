@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { Button, Card, H1, H2, Muted, P, Row, Screen } from '../../components/ui'
 import { Figure } from '../../components/Figure'
 import { EXERCISE_MAP, PATTERN_NAMES } from '../../data/exercises'
+import { healthAvailable } from '../../lib/health'
 import { describeSet, generateProgram, LEVEL_NAMES } from '../../lib/program'
 import { CARDIO_KINDS, pace } from '../../lib/cardio'
 import { addDays, setState, todayStr, useStore } from '../../lib/store'
@@ -84,7 +85,7 @@ export default function Antrenman() {
           <Text style={{ color: C.accent, fontFamily: F.displayBold, fontSize: 40, letterSpacing: -2 }}>{weekKm || weekMin}</Text>
           <Text style={{ color: C.muted, fontFamily: F.body, fontSize: 13, marginBottom: 8 }}>{weekKm ? 'km' : 'dk'} bu hafta · {weekCardio.length} seans{weekKm ? ` · ${weekMin} dk` : ''}</Text>
         </Row>
-        {cardio.length === 0 && <Muted style={{ marginTop: 4 }}>Apple Watch&apos;la koştuğunda süre/mesafeyi &quot;Koşu ekle&quot;den gir; haftalık toplamın burada birikir.</Muted>}
+        {cardio.length === 0 && <Muted style={{ marginTop: 4 }}>{healthAvailable() ? 'Apple Watch koşularını almak için Ana ekrandaki «Bugün harcanan» kartına dokun, «Apple Sağlık’tan al»a bas. Saatsiz yaptığını «Koşu ekle»den gir.' : 'Apple Watch’la koştuğunda süre/mesafeyi «Koşu ekle»den gir; haftalık toplamın burada birikir.'}</Muted>}
         {[...cardio].reverse().slice(0, 6).map((c) => {
           const k = CARDIO_KINDS.find((x) => x.value === c.kind)
           return (
