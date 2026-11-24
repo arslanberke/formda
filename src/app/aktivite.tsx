@@ -1,7 +1,7 @@
 import { router } from 'expo-router'
 import React, { useState } from 'react'
-import { Alert, Text, View } from 'react-native'
-import { Button, Card, H1, Muted, NumberInput, Row, Screen, TopBar } from '../components/ui'
+import { Alert, Text } from 'react-native'
+import { Button, Card, H1, Muted, NumberInput, Screen, TopBar } from '../components/ui'
 import { stepKcal, useEnergy } from '../lib/energy'
 import { healthAvailable, importToday } from '../lib/health'
 import { setState, useStore } from '../lib/store'
@@ -44,10 +44,8 @@ export default function Aktivite() {
       </Muted>
       {healthAvailable() && <Button title="Apple Sağlık'tan al" kind="secondary" loading={busy} onPress={fromHealth} style={{ marginBottom: 12 }} />}
       <Card>
-        <Row>
-          <View style={{ flex: 1 }}><NumberInput label="Aktif kalori (saat)" suffix="kcal" value={active} onChange={setActive} placeholder="ops." /></View>
-          <View style={{ flex: 1 }}><NumberInput label="Adım" value={steps} onChange={setSteps} step={500} placeholder="ops." /></View>
-        </Row>
+        <NumberInput label="Aktif kalori (saatin Hareket halkası)" suffix="kcal" value={active} onChange={setActive} placeholder="ops." />
+        <NumberInput label="Adım" value={steps} onChange={setSteps} step={500} placeholder="ops." />
         {active == null && steps ? (
           <Text style={{ color: C.muted, fontFamily: F.body, fontSize: 13, marginTop: 4 }}>
             {steps} adım ≈ <Text style={{ color: C.accent }}>{Math.round(stepKcal(steps, profile, weightKg))} kcal</Text> (dinlenmenin üstüne)

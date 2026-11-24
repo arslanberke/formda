@@ -72,6 +72,13 @@ export default function Home() {
         </View>
       </Animated.View>
 
+      {profile.setupPending ? (
+        <Pressable onPress={() => router.push('/onboarding')} style={[s.card, { marginTop: 18, marginBottom: 0, borderColor: C.accent }]}>
+          <Text style={[s.kicker, { color: C.accent }]}>PROFİLİNİ TAMAMLA · 1 DK</Text>
+          <Text style={[s.idx, { marginTop: 6, color: C.text, fontSize: 14, lineHeight: 20 }]}>Şu an varsayılan değerlerle (30 yaş, 175 cm, 75 kg, sadece vücut ağırlığı) çalışıyorum. Boy, kilo ve ekipmanını girersen kalori hedefin ve programın sana göre olur.</Text>
+        </Pressable>
+      ) : null}
+
       <View style={{ marginTop: 26, minHeight: 300 }}>
         {hero ? (
           <Animated.View entering={FadeInRight.delay(260).springify().damping(18)} style={s.heroFig} pointerEvents="none">

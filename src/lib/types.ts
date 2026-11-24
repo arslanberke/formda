@@ -21,6 +21,7 @@ export interface Profile {
   barWeight: number
   plates: number[]      // mevcut plakalar (tek taraf toplamı değil, tüm plaka listesi)
   createdAt: string
+  setupPending?: boolean // kayıt atlandı, varsayılan değerlerle çalışıyor
 }
 
 export interface Prescription {

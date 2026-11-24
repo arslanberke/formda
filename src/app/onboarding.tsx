@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { Alert, Text, View } from 'react-native'
 import { Button, Card, Chip, H1, H2, Input, Muted, NumberInput, P, Row, Screen, Segment, Steps, Wrap, TopBar } from '../components/ui'
 import { EQUIPMENT } from '../data/exercises'
-import { generateProgram } from '../lib/program'
+import { evaluate, generateProgram } from '../lib/program'
 import { setState, todayStr, useStore } from '../lib/store'
 import { C, F } from '../lib/theme'
 import type { Activity, EquipmentId, Goal, Profile, Sex } from '../lib/types'
@@ -61,6 +61,16 @@ export default function Onboarding() {
     })
     if (existing) router.back()
     else router.replace('/assessment')
+  }
+
+  const skip = () => {
+    const profile: Profile = {
+      name: 'Sporcu', sex: 'm', birthYear: new Date().getFullYear() - 30, heightCm: 175, goal: 'maintain', activity: 'sedentary', daysPerWeek: 3,
+      equipment: ['bodyweight'], dumbbells: [], kettlebells: [], plates: [], barWeight: 20, createdAt: new Date().toISOString(), setupPending: true,
+    }
+    const assessment = evaluate(profile, 75, {}, {}, {})
+    setState({ profile, assessment, program: generateProgram(profile, assessment, 75), progress: {} })
+    router.replace('/(tabs)')
   }
 
   return (
@@ -156,6 +166,7 @@ export default function Onboarding() {
         {step > 0 && <Button title="Geri" kind="ghost" onPress={() => setStep(step - 1)} style={{ flex: 1 }} />}
         <Button title={step === 3 ? (existing ? 'Kaydet' : 'Teste başla') : 'Devam'} onPress={next} style={{ flex: 2 }} />
       </Row>
+      {!existing && step === 0 ? <Button title="Şimdilik geç, sonra ayarlarım" kind="ghost" style={{ marginTop: 8 }} onPress={skip} /> : null}
     </Screen>
   )
 }
