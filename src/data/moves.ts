@@ -97,6 +97,8 @@ export const PHOTOS: Record<string, number> = {
   db_kickback: require('../../assets/photos/tricep_dumbbell_kickback.webp'),
   kb_triceps: require('../../assets/photos/standing_dumbbell_triceps_extension.webp'),
   bench_dips: require('../../assets/photos/bench_dips.webp'),
+  close_incline_pushup: require('../../assets/photos/close_incline_pushup.webp'),
+  diamond_pushup: require('../../assets/photos/diamond_pushup.webp'),
   farmers_walk: require('../../assets/photos/farmers_walk.webp'),
   russian_twist: require('../../assets/photos/russian_twist.webp'),
   crunch: require('../../assets/photos/crunches.webp'),

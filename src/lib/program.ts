@@ -212,39 +212,45 @@ function cardioFinisher(p: Profile, a: Assessment): Prescription | null {
 
 export function generateProgram(p: Profile, a: Assessment, weightKg: number): Program {
   const L = (pt: Pattern) => a.levels[pt] ?? 0
-  const days: ProgramDay[] = []
   const used: string[] = []
-  const pick = (pt: Pattern, alt = false): Prescription | null => {
-    let ex = pickExercise(p, pt, L(pt), alt ? used : [])
-    // testte 6+ tekrar yapabildiği şınav çeşidiyle başla
-    if (!alt && pt === 'push' && a.variants?.push && (a.results.push ?? 0) >= 6) {
-      const tested = EXERCISES.find((e) => e.id === a.variants!.push)
-      if (tested && hasEquipment(tested, p.equipment)) ex = tested
-    }
-    if (!ex) return null
-    used.push(ex.id)
-    return prescribe(p, ex, a, weightKg)
-  }
   const warm: Prescription = { exerciseId: 'jumping_jack', sets: 1, reps: 45, restSec: 30 }
   // koşu bandı / bisiklet varsa her günün sonuna kondisyon bitirişi
   const cardio = cardioFinisher(p, a)
-  const withCardio = (d: ProgramDay): ProgramDay => (cardio ? { ...d, items: [...d.items, cardio] } : d)
-  if (p.daysPerWeek <= 3) {
-    const A: ProgramDay = { name: 'Tüm Vücut A', items: [warm, pick('squat'), pick('push'), pick('pull'), pick('hinge'), pick('core'), L('arms') >= 1 ? pick('arms') : null].filter(Boolean) as Prescription[] }
-    const B: ProgramDay = { name: 'Tüm Vücut B', items: [warm, pick('hinge', true), pick('vpush'), pick('pull', true), pick('lunge'), pick('core', true), L('arms') >= 1 ? pick('arms', true) : null].filter(Boolean) as Prescription[] }
-    days.push(A, B)
-    if (p.daysPerWeek === 3) {
-      const Cc: ProgramDay = { name: 'Tüm Vücut C', items: [warm, pick('squat', true), pick('push', true), pick('pull'), pick('lunge', true), pick('core')].filter(Boolean) as Prescription[] }
-      days.push(Cc)
+  // her bölge için elindeki ekipmanla yapılabilen bir hareket seç; "alt" günlerde başka çeşit dene,
+  // çeşit kalmadıysa aynı günü tekrarlamadan eldekini kullan ki hiçbir bölge boş kalmasın
+  const day = (name: string, slots: [Pattern, boolean?][]): ProgramDay => {
+    const today: string[] = []
+    const items: Prescription[] = [warm]
+    for (const [pt, alt] of slots) {
+      if (pt === 'arms' && L('arms') < 1) continue
+      let ex = pickExercise(p, pt, L(pt), alt ? [...used, ...today] : today) ?? pickExercise(p, pt, L(pt), today)
+      // testte 6+ tekrar yapabildiği şınav çeşidiyle başla
+      if (!alt && pt === 'push' && a.variants?.push && (a.results.push ?? 0) >= 6) {
+        const tested = EXERCISE_MAP[a.variants.push]
+        if (tested && hasEquipment(tested, p.equipment) && !today.includes(tested.id)) ex = tested
+      }
+      if (!ex) continue
+      used.push(ex.id); today.push(ex.id)
+      items.push(prescribe(p, ex, a, weightKg))
     }
-    return { createdAt: new Date().toISOString(), days: days.map(withCardio), split: 'full' }
+    if (cardio) items.push(cardio)
+    return { name, items }
   }
-  const U1: ProgramDay = { name: 'Üst Vücut A', items: [warm, pick('push'), pick('pull'), pick('vpush'), pick('pull', true), L('arms') >= 1 ? pick('arms') : null, pick('core')].filter(Boolean) as Prescription[] }
-  const L1: ProgramDay = { name: 'Alt Vücut A', items: [warm, pick('squat'), pick('hinge'), pick('lunge'), pick('core', true)].filter(Boolean) as Prescription[] }
-  const U2: ProgramDay = { name: 'Üst Vücut B', items: [warm, pick('vpush', true), pick('pull', true), pick('push', true), L('arms') >= 1 ? pick('arms', true) : null, pick('core')].filter(Boolean) as Prescription[] }
-  const L2: ProgramDay = { name: 'Alt Vücut B', items: [warm, pick('hinge', true), pick('squat', true), pick('lunge', true), pick('core', true)].filter(Boolean) as Prescription[] }
-  days.push(U1, L1, U2, L2)
-  return { createdAt: new Date().toISOString(), days: days.map(withCardio), split: 'ul' }
+  if (p.daysPerWeek <= 3) {
+    const days = [
+      day('Tüm Vücut A', [['squat'], ['push'], ['pull'], ['hinge'], ['core'], ['arms']]),
+      day('Tüm Vücut B', [['hinge', true], ['vpush'], ['pull', true], ['lunge'], ['core', true], ['arms', true]]),
+    ]
+    if (p.daysPerWeek === 3) days.push(day('Tüm Vücut C', [['squat', true], ['push', true], ['pull'], ['lunge', true], ['core']]))
+    return { createdAt: new Date().toISOString(), days, split: 'full' }
+  }
+  const days = [
+    day('Üst Vücut A', [['push'], ['pull'], ['vpush'], ['pull', true], ['arms'], ['core']]),
+    day('Alt Vücut A', [['squat'], ['hinge'], ['lunge'], ['core', true]]),
+    day('Üst Vücut B', [['vpush', true], ['pull', true], ['push', true], ['arms', true], ['core']]),
+    day('Alt Vücut B', [['hinge', true], ['squat', true], ['lunge', true], ['core', true]]),
+  ]
+  return { createdAt: new Date().toISOString(), days, split: 'ul' }
 }
 
 // ---------- İlerleme ----------

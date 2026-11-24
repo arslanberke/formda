@@ -164,6 +164,17 @@ export const EXTRA: X[] = [
     tips: ['Kolaylaştırmak için dizleri bük, zorlaştırmak için bacakları uzat.', 'Omzun ağrırsa daha az in.'], repRange: [8, 15],
   },
 
+  {
+    id: 'close_incline_pushup', name: 'Dar Eğimli Şınav', pattern: 'arms', tier: 1, equipment: [], load: 'bw', unit: 'reps', img: 'Incline_Push-Up_Close-Grip', muscles: 'Arka kol, göğüs',
+    steps: ['Ellerini omuz genişliğinden dar şekilde masa/tezgah kenarına koy.', 'Dirsekleri gövdene yakın tutarak göğsünü kenara indir.', 'Arka kolunla iterek yukarı çık.'],
+    tips: ['Yüzey ne kadar yüksekse o kadar kolay.', 'Dirsekler yana açılmasın.'], repRange: [8, 15],
+  },
+  {
+    id: 'diamond_pushup', name: 'Dar Şınav', pattern: 'arms', tier: 3, equipment: [], load: 'bw', unit: 'reps', img: 'Push-Ups_-_Close_Triceps_Position', muscles: 'Arka kol, göğüs, ön omuz',
+    steps: ['Şınav pozisyonu al, eller göğsünün altında, birbirine yakın.', 'Dirsekleri gövdeye sürterek göğsünü ellerine indir.', 'Kollarını düzelterek yukarı it.'],
+    tips: ['Zor gelirse dizlerin yerde yap.', 'Bel çökmesin.'], repRange: [5, 12],
+  },
+
   // ---------- CORE ----------
   {
     id: 'farmers_walk', name: 'Çiftçi Yürüyüşü', pattern: 'core', tier: 2, equipment: ['dumbbell'], load: 'dumbbell', unit: 'sec', img: 'Farmers_Walk', muscles: 'Kavrama, core, trapez',
