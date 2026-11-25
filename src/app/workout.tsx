@@ -6,10 +6,12 @@ import { Ionicons } from '@expo/vector-icons'
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated'
 import { Figure } from '../components/Figure'
+import { Routine } from '../components/Routine'
 import { Sheet } from '../components/Sheet'
 import { Button, Chip, Muted, NumberInput, Row, Screen } from '../components/ui'
 import { EQUIPMENT, EXERCISE_MAP, type Exercise } from '../data/exercises'
 import { hasMove } from '../data/moves'
+import { COOLDOWN, WARMUP } from '../data/warmup'
 import { alternatives, describeBands, describeSet, progressAfterWorkout, stepLoad, swapPrescription } from '../lib/program'
 import { excludeExercise, getState, setState, todayStr, uid, useStore } from '../lib/store'
 import { C, F } from '../lib/theme'
@@ -28,6 +30,7 @@ export default function Workout() {
   const [summary, setSummary] = useState<string[] | null>(null)
   const [askFeel, setAskFeel] = useState(false)
   const [swapOpen, setSwapOpen] = useState(false)
+  const [phase, setPhase] = useState<'warm' | 'main' | 'cool'>(() => getState().activeWorkout?.entries.some((x) => x.sets.some((y) => y.done)) ? 'main' : 'warm')
 
   // aktif antrenman yoksa oluştur
   useEffect(() => {
@@ -66,6 +69,13 @@ export default function Workout() {
   const alts = ex && ex.pattern !== 'cardio' ? alternatives(profile, ex.id).filter((a) => !entries.some((x) => x.exerciseId === a.id)) : []
   const doneSets = entries.reduce((a, x) => a + x.sets.filter((s) => s.done).length, 0)
   const totalSets = entries.reduce((a, x) => a + x.sets.length, 0)
+
+  if (phase === 'warm') {
+    return <Routine kicker="ISINMA" title="Önce 4 dakika ısın" intro="Eklemlerini açar, kaslarını hazırlar, sakatlanma riskini azaltır. Her hareketin süresi otomatik akar." steps={WARMUP} skipLabel="Isınmayı atla" onDone={() => setPhase('main')} />
+  }
+  if (summary && phase === 'cool') {
+    return <Routine kicker="ESNEME" title="Bitirmeden esne" intro="Antrenman kaydedildi. Kaslar sıcakken esnemek hareket açıklığını artırır. Gerginlik hisset ama acıtma." steps={COOLDOWN} skipLabel="Esnemeyi atla" onDone={() => setPhase('main')} />
+  }
 
   if (summary) {
     return (
@@ -145,6 +155,7 @@ export default function Workout() {
     })
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {})
     setSummary(msgs)
+    setPhase('cool')
   }
 
   const cancel = () => Alert.alert('Antrenmanı iptal et?', 'Bu antrenman kaydedilmez.', [{ text: 'Vazgeç' }, { text: 'İptal et', style: 'destructive', onPress: () => { setState({ activeWorkout: null }); router.back() } }])

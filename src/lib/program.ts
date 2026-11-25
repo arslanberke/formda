@@ -244,14 +244,13 @@ function cardioFinisher(p: Profile, a: Assessment): Prescription | null {
 export function generateProgram(p: Profile, a: Assessment, weightKg: number): Program {
   const L = (pt: Pattern) => a.levels[pt] ?? 0
   const used: string[] = []
-  const warm: Prescription = { exerciseId: 'jumping_jack', sets: 1, reps: 45, restSec: 30 }
   // koşu bandı / bisiklet varsa her günün sonuna kondisyon bitirişi
   const cardio = cardioFinisher(p, a)
   // her bölge için elindeki ekipmanla yapılabilen bir hareket seç; "alt" günlerde başka çeşit dene,
   // çeşit kalmadıysa aynı günü tekrarlamadan eldekini kullan ki hiçbir bölge boş kalmasın
   const day = (name: string, slots: [Pattern, boolean?][]): ProgramDay => {
     const today: string[] = []
-    const items: Prescription[] = [warm]
+    const items: Prescription[] = []
     for (const [pt, alt] of slots) {
       if (pt === 'arms' && L('arms') < 1) continue
       let ex = pickExercise(p, pt, L(pt), alt ? [...used, ...today] : today) ?? pickExercise(p, pt, L(pt), today)

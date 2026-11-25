@@ -13,6 +13,7 @@ import { describeSet } from '../../lib/program'
 import { addDays, getState, todayStr, useStore } from '../../lib/store'
 import { C, F } from '../../lib/theme'
 import { weekly } from '../../lib/weekly'
+import { COOLDOWN, WARMUP, routineMinutes } from '../../data/warmup'
 import type { ProgramDay } from '../../lib/types'
 
 const DAYS = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi']
@@ -25,7 +26,7 @@ function estMinutes(day: ProgramDay) {
     const work = ex?.unit === 'sec' ? it.reps : it.reps * 3.5
     s += it.sets * (work + 20) + Math.max(0, it.sets - 1) * it.restSec + 60
   }
-  return Math.max(5, Math.round(s / 60))
+  return Math.max(5, Math.round(s / 60)) + routineMinutes(WARMUP) + routineMinutes(COOLDOWN)
 }
 
 const enter = (i: number) => FadeInDown.delay(80 + i * 70).springify().damping(16)

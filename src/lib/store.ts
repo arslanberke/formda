@@ -29,6 +29,8 @@ export async function hydrate() {
   try {
     const raw = await AsyncStorage.getItem(KEY)
     if (raw) state = { ...emptyState, ...JSON.parse(raw) }
+    // eski programlarda ilk hareket 45 sn jumping jack ısınmasıydı; artık ayrı ısınma akışı var
+    state.program?.days.forEach((d) => { if (d.items[0]?.exerciseId === 'jumping_jack' && d.items[0].reps === 45 && d.items[0].sets === 1) { d.items.shift(); persist() } })
   } catch {
     state = emptyState
   }
