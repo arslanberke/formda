@@ -2,7 +2,7 @@ import { router } from 'expo-router'
 import React, { useState } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native'
-import Animated, { FadeInDown, FadeOut } from 'react-native-reanimated'
+import Animated, { FadeOut } from 'react-native-reanimated'
 import { SwipeDelete } from '../../components/SwipeDelete'
 import { CountUp, Ring } from '../../components/motion'
 import { Muted, Screen } from '../../components/ui'
@@ -29,12 +29,11 @@ export default function Beslenme() {
 
   const left = tg.kcal - kcal
   const glasses = Math.max(1, Math.round(tg.waterMl / 250))
-  const enter = (k: number) => FadeInDown.delay(60 + k * 60).springify().damping(16)
   const [y, mo, d] = date.split('-')
 
   return (
     <Screen>
-      <Animated.View entering={enter(0)} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Animated.View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <Pressable onPress={() => setDate(addDays(date, -1))} hitSlop={10} style={g.round}><Ionicons name="chevron-back" size={18} color={C.text} /></Pressable>
         <Pressable onPress={() => setDate(todayStr())} style={{ alignItems: 'center' }}>
           <Text style={g.kicker}>BESLENME</Text>
@@ -43,7 +42,7 @@ export default function Beslenme() {
         <Pressable onPress={() => !isToday && setDate(addDays(date, 1))} hitSlop={10} style={[g.round, isToday && { opacity: 0.3 }]}><Ionicons name="chevron-forward" size={18} color={C.text} /></Pressable>
       </Animated.View>
 
-      <Animated.View entering={enter(1)} style={{ alignItems: 'center', marginTop: 22 }}>
+      <Animated.View style={{ alignItems: 'center', marginTop: 22 }}>
         <Ring size={232} stroke={14} value={kcal} max={tg.kcal} color={kcal > tg.kcal * 1.1 ? C.danger : C.accent}>
           <CountUp to={Math.abs(left)} style={g.big} />
           <Text style={g.bigSub}>{left >= 0 ? 'kcal kaldı' : 'kcal fazla'}</Text>
@@ -51,7 +50,7 @@ export default function Beslenme() {
         </Ring>
       </Animated.View>
 
-      <Animated.View entering={enter(2)} style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 22, marginBottom: 18 }}>
+      <Animated.View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 22, marginBottom: 18 }}>
         {([['Protein', sum('protein'), tg.protein, C.accent], ['Karb', sum('carbs'), tg.carbs, C.carb], ['Yağ', sum('fat'), tg.fat, C.purple]] as const).map(([l, v, t, col], k) => (
           <View key={l} style={{ alignItems: 'center' }}>
             <Ring size={74} stroke={6} value={v} max={t} color={col} delay={300 + k * 120}>
@@ -63,7 +62,7 @@ export default function Beslenme() {
         ))}
       </Animated.View>
 
-      <Animated.View entering={enter(3)} style={g.card}>
+      <Animated.View style={g.card}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
           <View>
             <Text style={g.kicker}>SU</Text>
@@ -90,7 +89,7 @@ export default function Beslenme() {
         const lastK = Math.round(last.reduce((a, f) => a + f.kcal, 0))
         const repeat = () => setState((s) => ({ foods: [...s.foods, ...last.map((f) => ({ ...f, id: uid(), date }))] }))
         return (
-          <Animated.View entering={enter(4 + k)} key={m.id} style={g.card}>
+          <Animated.View key={m.id} style={g.card}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <View>
                 <Text style={g.meal}>{m.name}</Text>

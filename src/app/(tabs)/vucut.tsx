@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Alert, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native'
-import Animated, { FadeInDown } from 'react-native-reanimated'
+import Animated from 'react-native-reanimated'
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop, Text as SvgText } from 'react-native-svg'
 import { CountUp } from '../../components/motion'
 import { Button, Card, H2, Muted, NumberInput, Row, Screen } from '../../components/ui'
@@ -43,7 +43,7 @@ export default function Vucut() {
 
   return (
     <Screen>
-      <Animated.View entering={FadeInDown.delay(60).springify().damping(16)}>
+      <Animated.View>
         <Text style={v.kicker}>VÜCUT · ŞU AN</Text>
         <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
           {last ? <CountUp to={last.weightKg} decimals={last.weightKg % 1 ? 1 : 0} style={v.big} /> : <Text style={v.big}>—</Text>}
@@ -57,7 +57,7 @@ export default function Vucut() {
       </Animated.View>
 
       {body.length >= 2 && (
-        <Animated.View entering={FadeInDown.delay(140).springify().damping(16)} style={{ marginBottom: 14, marginHorizontal: -4 }}>
+        <Animated.View style={{ marginBottom: 14, marginHorizontal: -4 }}>
           <Chart data={body.slice(-30)} width={width - 32} />
         </Animated.View>
       )}

@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router'
 import React, { useEffect, useRef, useState } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated'
+import Animated, { FadeIn } from 'react-native-reanimated'
 import { Figure } from '../components/Figure'
 import { Routine } from '../components/Routine'
 import { Sheet } from '../components/Sheet'
@@ -80,13 +80,13 @@ export default function Workout() {
   if (summary) {
     return (
       <Screen padBottom={40}>
-        <Animated.Text entering={FadeInDown.springify()} style={st.kicker}>ANTRENMAN BİTTİ</Animated.Text>
-        <Animated.View entering={FadeInDown.delay(80).springify()} style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+        <Animated.Text style={st.kicker}>ANTRENMAN BİTTİ</Animated.Text>
+        <Animated.View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
           <Text style={st.big}>{doneSets}</Text><Text style={st.bigUnit}>set</Text>
         </Animated.View>
         <Text style={[st.sub, { marginBottom: 18 }]}>Programın şöyle güncellendi:</Text>
         {summary.map((m, i) => (
-          <Animated.View key={i} entering={FadeInDown.delay(160 + i * 60).springify()} style={st.tile}>
+          <Animated.View key={i} style={st.tile}>
             <Text style={st.tileTxt}>{m}</Text>
           </Animated.View>
         ))}

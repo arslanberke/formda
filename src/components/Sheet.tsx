@@ -1,7 +1,7 @@
 import { BlurView } from 'expo-blur'
 import React, { useEffect, useState } from 'react'
 import { Modal, Pressable, StyleSheet, View } from 'react-native'
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated'
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 
 // Spotlight tarzı panel: ortadan, hafif aşağıdan büyüyerek açılır; arka plan buzlanır.
 export function Sheet({ visible, onClose, children }: { visible: boolean; onClose: () => void; children: React.ReactNode }) {
@@ -10,7 +10,7 @@ export function Sheet({ visible, onClose, children }: { visible: boolean; onClos
   if (visible && !mounted) setMounted(true)
   useEffect(() => {
     if (visible) {
-      p.value = withSpring(1, { damping: 15, stiffness: 190, mass: 0.9 })
+      p.value = withTiming(1, { duration: 240, easing: Easing.out(Easing.cubic) })
     } else if (mounted) {
       p.value = withTiming(0, { duration: 170, easing: Easing.in(Easing.quad) })
       const t = setTimeout(() => setMounted(false), 180)

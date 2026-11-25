@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import React from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
-import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated'
+import Animated from 'react-native-reanimated'
 import { Figure } from '../../components/Figure'
 import { CountUp, Ring } from '../../components/motion'
 import { Bar, Screen } from '../../components/ui'
@@ -29,7 +29,6 @@ function estMinutes(day: ProgramDay) {
   return Math.max(5, Math.round(s / 60)) + routineMinutes(WARMUP) + routineMinutes(COOLDOWN)
 }
 
-const enter = (i: number) => FadeInDown.delay(80 + i * 70).springify().damping(16)
 
 export default function Home() {
   const profile = useStore((s) => s.profile)!
@@ -63,7 +62,7 @@ export default function Home() {
 
   return (
     <Screen>
-      <Animated.View entering={enter(0)} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <Animated.View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <View>
           <Text style={s.kicker}>{DAYS[now.getDay()]}, {now.getDate()} {MONTHS[now.getMonth()]}</Text>
           <Text style={s.greet}>{greet},{'\n'}{profile.name}</Text>
@@ -84,20 +83,20 @@ export default function Home() {
 
       <View style={{ marginTop: 26, minHeight: 300 }}>
         {hero ? (
-          <Animated.View entering={FadeInRight.delay(260).springify().damping(18)} style={s.heroFig} pointerEvents="none">
+          <Animated.View style={s.heroFig} pointerEvents="none">
             <Figure id={hero} size={300} glow />
           </Animated.View>
         ) : null}
-        <Animated.View entering={enter(1)}>
+        <Animated.View>
           <Text style={s.kicker}>{active ? 'DEVAM EDEN' : doneToday ? 'BUGÜN TAMAM · SIRADAKİ' : 'SIRADAKİ'}{nextDay ? ` · ${nextDay.name.toLocaleUpperCase('tr')}` : ''}</Text>
         </Animated.View>
         {nextDay ? (
           <>
-            <Animated.View entering={enter(2)} style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+            <Animated.View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
               <CountUp to={estMinutes(nextDay)} style={s.big} />
               <Text style={s.bigUnit}>dk</Text>
             </Animated.View>
-            <Animated.View entering={enter(3)}>
+            <Animated.View>
               <Text style={s.sub}>{nextDay.items.length} hareket · {totalSets} set</Text>
               <View style={{ marginTop: 16, gap: 7, maxWidth: '62%' }}>
                 {nextDay.items.slice(0, 5).map((it, i) => (
@@ -109,7 +108,7 @@ export default function Home() {
                 {nextDay.items.length > 5 ? <Text style={[s.idx, { marginLeft: 26 }]}>+{nextDay.items.length - 5} hareket</Text> : null}
               </View>
             </Animated.View>
-            <Animated.View entering={enter(4)}>
+            <Animated.View>
               <Pressable onPress={start} style={({ pressed }) => [s.cta, pressed && { transform: [{ scale: 0.97 }] }]}>
                 <Text style={s.ctaTxt}>{active ? 'Antrenmana dön' : doneToday ? 'Yine de başla' : 'Antrenmana başla'}</Text>
                 <View style={s.ctaArrow}><Ionicons name="arrow-forward" size={18} color={C.accent} /></View>
@@ -118,7 +117,7 @@ export default function Home() {
             </Animated.View>
           </>
         ) : (
-          <Animated.View entering={enter(2)}>
+          <Animated.View>
             <Text style={[s.greet, { fontSize: 30, marginTop: 8 }]}>Önce gücünü{'\n'}ölçelim.</Text>
             <Text style={[s.sub, { marginTop: 8, maxWidth: 280 }]}>5 dakikalık kapasite testiyle programın sana göre ayarlanır.</Text>
             <Pressable onPress={() => router.push('/assessment')} style={s.cta}>
@@ -129,7 +128,7 @@ export default function Home() {
         )}
       </View>
 
-      <Animated.View entering={enter(5)}>
+      <Animated.View>
         <Pressable onPress={() => router.navigate('/(tabs)/beslenme')} style={[s.card, { flexDirection: 'row', alignItems: 'center', gap: 18 }]}>
           <Ring size={104} stroke={9} value={kcal} max={tg.kcal} color={kcal > tg.kcal * 1.1 ? C.danger : C.accent}>
             <CountUp to={Math.max(0, tg.kcal - kcal)} style={s.ringNum} />
@@ -150,7 +149,7 @@ export default function Home() {
       </Animated.View>
 
       {burn ? (
-        <Animated.View entering={enter(6)}>
+        <Animated.View>
           <Pressable onPress={() => router.push('/aktivite')} style={s.card}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <View>
@@ -183,7 +182,7 @@ export default function Home() {
         </Animated.View>
       ) : null}
 
-      <Animated.View entering={enter(7)} style={{ flexDirection: 'row', gap: 12 }}>
+      <Animated.View style={{ flexDirection: 'row', gap: 12 }}>
         <Pressable onPress={() => router.navigate('/(tabs)/beslenme')} style={[s.card, { flex: 1 }]}>
           <Text style={s.kicker}>SU</Text>
           <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
@@ -211,7 +210,7 @@ export default function Home() {
       </Animated.View>
 
       {wk ? (
-        <Animated.View entering={enter(8)} style={s.card}>
+        <Animated.View style={s.card}>
           <Text style={s.kicker}>SON 7 GÜN</Text>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
             {([

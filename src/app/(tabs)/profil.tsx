@@ -4,7 +4,7 @@ import { router } from 'expo-router'
 import * as Sharing from 'expo-sharing'
 import React, { useState } from 'react'
 import { Alert, Platform, StyleSheet, Text, View } from 'react-native'
-import Animated, { FadeInDown } from 'react-native-reanimated'
+import Animated from 'react-native-reanimated'
 import { CountUp } from '../../components/motion'
 import { Button, Card, Chip, H2, Muted, P, Row, Screen, Wrap } from '../../components/ui'
 import { applyReminders, WEEKDAYS } from '../../lib/reminders'
@@ -55,7 +55,7 @@ export default function Profil() {
 
   return (
     <Screen>
-      <Animated.View entering={FadeInDown.delay(60).springify().damping(16)}>
+      <Animated.View>
         <Text style={pf.kicker}>{age(profile)} YAŞ · {profile.heightCm} CM · {weightKg} KG · {GOALS[profile.goal].toLocaleUpperCase('tr')}</Text>
         <Text style={pf.name}>{profile.name}</Text>
         <Text style={[pf.kicker, { marginTop: 20 }]}>GÜNLÜK HEDEF</Text>
